@@ -1,0 +1,27 @@
+{
+  "name": "c-drive-cleaner",
+  "version": "0.1.0",
+  "private": true,
+  "description": "C 盘空间分析仪表盘（umi/max + antd5，Figma Dark 风格）",
+  "scripts": {
+    "dev": "max dev",
+    "build": "max build",
+    "postinstall": "max setup",
+    "setup": "max setup",
+    "tsc": "tsc --noEmit",
+    "server": "node server/index.js",
+    "test": "node --test \"server/tests/*.test.js\""
+  },
+  "dependencies": {
+    "@ant-design/icons": "^5.5.1",
+    "@umijs/max": "^4.3.29",
+    "antd": "^5.21.6",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.5",
+    "@types/react-dom": "^18.3.0",
+    "typescript": "^5.5.4"
+  }
+}

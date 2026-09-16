@@ -1,0 +1,78 @@
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: #212332;
+  color: #f0f0f0;
+}
+
+/* 滚动条 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: #32364a;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3d4258;
+}
+
+/* Figma 侧边栏 */
+.figma-sider {
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+}
+.figma-sider .ant-menu {
+  background: transparent !important;
+  border-inline-end: none !important;
+}
+.figma-sider .ant-menu-item {
+  margin-inline: 12px;
+  height: 44px;
+  line-height: 44px;
+  border-radius: 10px;
+  margin-top: 4px;
+}
+.figma-sider .ant-menu-item-selected {
+  background: linear-gradient(90deg, #2697ff 0%, #66b6ff 100%) !important;
+  color: #fff !important;
+  box-shadow: 4px 0 4px rgba(0, 0, 0, 0.1);
+}
+
+/* 顶栏搜索框 */
+.figma-search.ant-input-affix-wrapper {
+  background: #2a2d3e;
+  border: none;
+  border-radius: 10px;
+  box-shadow: none;
+}
+.figma-search.ant-input-affix-wrapper-focused {
+  border: 1px solid rgba(38, 151, 255, 0.5);
+}
+
+/* 操作指引代码块 */
+.guide-code {
+  background: #1b1e2b;
+  border: 1px solid rgba(38, 151, 255, 0.15);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-family: Consolas, 'Courier New', monospace;
+  font-size: 12px;
+  color: #b5c9db;
+  white-space: pre-wrap;
+  word-break: break-all;
+  line-height: 1.7;
+}
+
+/* 路径文本 */
+.path-text {
+  font-family: Consolas, 'Courier New', monospace;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  word-break: break-all;
+}

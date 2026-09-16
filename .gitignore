@@ -1,0 +1,9 @@
+node_modules
+dist
+src/.umi
+src/.umi-production
+scan-result.json
+.history
+.DS_Store
+*.local
+history/
