@@ -1,3 +1,12 @@
+const os = require('os');
+const path = require('path');
+const fs = require('fs');
+
+// 隔离数据目录：测试用独立临时目录，避免受真实 history/（验收扫描快照）污染，
+// 也避免测试污染真实数据。必须在 require('../index.js') 之前设置（模块加载时解析 paths）。
+const TEST_DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'cdrive-test-'));
+process.env.CLEANER_DATA_DIR = TEST_DATA_DIR;
+
 const { test, before, after } = require('node:test');
 const assert = require('node:assert');
 const { startServer } = require('../index.js');
@@ -11,7 +20,10 @@ before(async () => {
   base = `http://127.0.0.1:${server.address().port}`;
 });
 
-after(() => server.close());
+after(() => {
+  server.close();
+  try { fs.rmSync(TEST_DATA_DIR, { recursive: true, force: true }); } catch { /* 清理失败可忽略 */ }
+});
 
 test('GET /api/status 正常返回', async () => {
   const res = await fetch(`${base}/api/status`);

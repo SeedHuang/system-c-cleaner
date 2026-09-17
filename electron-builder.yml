@@ -6,6 +6,7 @@ files:
   - dist/**
   - server/**
   - electron/**
+  - "!electron/*.test.js"
   - "!server/tests/**"
   - package.json
 extraResources:

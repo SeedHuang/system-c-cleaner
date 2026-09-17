@@ -43,6 +43,14 @@ electron_builder_binaries_mirror=https://npmmirror.com/mirrors/electron-builder-
 |---|---|
 | `npm run dev` | 纯 Web 模式（浏览器访问，不启动 Electron） |
 | `npm run electron:dev` | 桌面模式：起前端 + 启动 Electron 窗口 |
+| `npm test` | 运行全部单元测试（server + electron） |
+
+## 三·五、桌面特性（Phase 2）
+
+- **系统托盘**：关闭窗口最小化到托盘（常驻后台，不退出），单击托盘图标恢复窗口
+- **托盘右键菜单**：打开主界面 / 立即扫描 / 开机自启（开关）/ 退出
+- **开机自启**：默认关闭；勾选后写入注册表 `HKCU\...\Run`，开机自启时**隐藏到托盘**（`--hidden`）
+- **立即扫描**：托盘直接触发一次 C 盘扫描，完成后刷新窗口
 
 ---
 
