@@ -2,11 +2,13 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, Breadcrumb, Button, Card, Col, Empty, InputNumber, Row, Segmented, Spin, Table, Tag } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { FolderOutlined } from '@ant-design/icons';
+import PathLink from '@/components/PathLink';
 import TrendChart from '@/components/TrendChart';
 import type { GrowthDirEntry, GrowthDirResult, GrowthTopResult, GrowthTier } from '@/services/growth';
 import { getGrowth, getGrowthDir, getGrowthTrend } from '@/services/growth';
 import { figmaColors } from '@/setup/theme';
 import { formatSize } from '@/utils/format';
+import { parentOf } from '@/utils/path';
 
 const WINDOW_OPTIONS = [
   { label: '1天', value: '1d' },
@@ -83,6 +85,12 @@ export default function TrendsPage() {
   const columns: ColumnsType<GrowthDirEntry> = [
     { title: '目录', dataIndex: 'name', key: 'name', ellipsis: true },
     {
+      title: '上级目录',
+      key: 'parent',
+      ellipsis: true,
+      render: (_, r) => <PathLink path={parentOf(r.path)} className="path-text" />,
+    },
+    {
       title: '当前大小',
       dataIndex: 'size',
       key: 'size',
@@ -122,7 +130,14 @@ export default function TrendsPage() {
       width: 80,
       render: (_, r) =>
         r.hasChildren ? (
-          <Button size="small" icon={<FolderOutlined />} onClick={() => openDir(r.path)}>
+          <Button
+            size="small"
+            icon={<FolderOutlined />}
+            onClick={(e) => {
+              e.stopPropagation(); // 行点击已负责下钻，避免重复请求
+              openDir(r.path);
+            }}
+          >
             进入
           </Button>
         ) : null,
@@ -197,8 +212,30 @@ export default function TrendsPage() {
                     <span style={{ width: 24, flexShrink: 0, color: figmaColors.primary }}>
                       <FolderOutlined />
                     </span>
-                    <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#fff' }}>
-                      {base}
+                    <span style={{ flex: 1, overflow: 'hidden' }}>
+                      {/* 名称整体仍是下钻（由行 onClick 处理），仅下方路径可点击打开文件夹 */}
+                      <span
+                        style={{
+                          display: 'block',
+                          color: '#fff',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {base}
+                      </span>
+                      <PathLink
+                        path={parentOf(e.path)}
+                        className="path-text"
+                        style={{
+                          display: 'block',
+                          fontSize: 11,
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}
+                      />
                     </span>
                     <span style={{ width: 90, textAlign: 'right', color: 'rgba(255,255,255,0.6)' }}>
                       {e.size == null ? '未扫描' : formatSize(e.size)}
@@ -243,6 +280,13 @@ export default function TrendsPage() {
                     columns={columns}
                     dataSource={dirData?.entries ?? []}
                     pagination={{ pageSize: 15, showTotal: (t) => `共 ${t} 项` }}
+                    onRow={(r) => ({
+                      // 整行下钻（「上级目录」列的路径点击已阻断冒泡，仍为打开文件夹）
+                      onClick: () => {
+                        if (r.hasChildren) openDir(r.path);
+                      },
+                      style: { cursor: r.hasChildren ? 'pointer' : 'default' },
+                    })}
                   />
                 )}
               </Card>

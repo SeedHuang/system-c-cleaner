@@ -21,51 +21,66 @@ const barColors = [
 
 const levelOrder = ['safe', 'caution', 'keep', 'never'] as const;
 
-type ElevatePhase = 'idle' | 'requesting' | 'waiting' | 'restarting' | 'scanning' | 'done' | 'cancelled' | 'failed';
+type ElevatePhase = 'idle' | 'requesting' | 'waiting' | 'scanning' | 'cancelled' | 'failed';
+
+/** 各阶段的固定提示；failed 阶段改用服务端返回的真实原因，避免一律提示"请重试" */
+const elevateHint: Record<ElevatePhase, string | null> = {
+  idle: null,
+  requesting: '正在请求管理员授权…',
+  waiting: '请在系统授权窗口点击「是」，应用将以管理员身份重启并自动重新扫描…',
+  scanning: '正在重新扫描（约 1~3 分钟），完成后自动更新数据…',
+  cancelled: '授权被取消或超时，可重试，或手动以管理员身份运行',
+  failed: '请求失败，请重试',
+};
+
+/** 进行中的阶段：按钮置灰，避免重复触发（服务端此时会返回 409） */
+const elevateBusy: ElevatePhase[] = ['requesting', 'waiting', 'scanning'];
 
 export default function DashboardPage() {
-  const { data, loading, scanning, startScan, refresh } = useModel('scan');
+  const { data, loading, scanning, startScan } = useModel('scan');
   const navigate = useNavigate();
   const [elevate, setElevate] = useState<ElevatePhase>('idle');
-  const [elevateMsg, setElevateMsg] = useState<string | null>(null);
+  const [elevateErr, setElevateErr] = useState<string | null>(null);
 
   const handleElevate = useCallback(async () => {
     setElevate('requesting');
-    setElevateMsg(null);
+    setElevateErr(null);
     try {
       await elevateRestart();
       setElevate('waiting');
-      setElevateMsg('请在系统授权窗口点击「是」，应用将以管理员身份重启并自动重新扫描…');
-    } catch {
+    } catch (e) {
       setElevate('failed');
-      setElevateMsg('请求失败，请重试');
+      setElevateErr(e instanceof Error ? e.message : '请求失败，请重试');
     }
   }, []);
 
-  // 提权重启后轮询状态：旧服务退出 → 新服务扫描中 → 完成刷新
+  // 提权阶段以服务端 /api/status 为唯一依据：切换页面重新挂载后也能恢复到真实阶段，
+  // 不会又把按钮显示成"可点击"，从而误触发出 409
   useEffect(() => {
-    if (elevate !== 'waiting' && elevate !== 'restarting' && elevate !== 'scanning') return;
-    const timer = setInterval(async () => {
+    let cancelled = false;
+    const sync = async () => {
       try {
         const st = await getStatus();
-        if (st.elevatedScan === 'cancelled') {
-          setElevate('cancelled');
-          setElevateMsg('授权被取消或超时，可重试，或手动以管理员身份运行');
-        } else if (st.scanning) {
-          setElevate('scanning');
-          setElevateMsg('正在以管理员身份重新扫描（约 1~3 分钟），完成后自动更新数据…');
-        } else if (elevate === 'scanning') {
-          setElevate('done');
-          setElevateMsg('提权重扫完成，数据已更新');
-          refresh();
-        }
+        if (cancelled) return;
+        setElevate((prev) => {
+          if (prev === 'requesting') return prev; // 本地请求进行中，等它自己的结果
+          if (st.elevatedScan === 'running') return 'waiting';
+          if (st.scanning) return 'scanning';
+          if (prev === 'failed') return prev; // 保留失败原因，直到用户重试
+          if (st.elevatedScan === 'cancelled') return 'cancelled';
+          return 'idle';
+        });
       } catch {
-        setElevate('restarting');
-        setElevateMsg('应用正在以管理员身份重启…');
+        /* 旧服务已退出、新服务未就绪：保持当前阶段，等下一轮 */
       }
-    }, 4000);
-    return () => clearInterval(timer);
-  }, [elevate, refresh]);
+    };
+    sync();
+    const timer = setInterval(sync, 4000);
+    return () => { cancelled = true; clearInterval(timer); };
+  }, []);
+
+  const elevateRunning = elevateBusy.includes(elevate);
+  const elevateText = elevate === 'failed' ? elevateErr ?? elevateHint.failed : elevateHint[elevate];
 
   if (loading) {
     return (
@@ -194,15 +209,13 @@ export default function DashboardPage() {
                     size="small"
                     icon={<DatabaseOutlined />}
                     loading={elevate === 'requesting'}
-                    disabled={elevate === 'waiting' || elevate === 'restarting' || elevate === 'scanning'}
+                    disabled={elevateRunning}
                     onClick={handleElevate}
                   >
                     一键以管理员身份重扫
                   </Button>
-                  {(elevate === 'waiting' || elevate === 'restarting' || elevate === 'scanning') && (
-                    <Spin size="small" />
-                  )}
-                  {elevateMsg && <span style={{ color: 'rgba(255,255,255,0.75)' }}>{elevateMsg}</span>}
+                  {elevateRunning && <Spin size="small" />}
+                  {elevateText && <span style={{ color: 'rgba(255,255,255,0.75)' }}>{elevateText}</span>}
                 </div>
               </div>
             )}

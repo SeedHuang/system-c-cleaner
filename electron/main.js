@@ -3,8 +3,9 @@
  * 开发：内嵌 server(8090) 失败则复用现有服务，窗口加载 http://localhost:8000（umi dev + proxy）
  * 生产：内嵌 server(8090 退避) 托管 asar 内 dist/，窗口加载 http://localhost:<实际端口>
  * Phase 2：系统托盘（关窗最小化、托盘菜单）、开机自启（--hidden 隐藏启动）、托盘立即扫描
+ * Phase 3：桌面悬浮小组件（置顶卡片、位置记忆、点击打开主窗口、托盘开关）
  */
-const { app, BrowserWindow, Tray, Menu, nativeImage } = require('electron');
+const { app, BrowserWindow, Tray, Menu, nativeImage, ipcMain, screen, shell } = require('electron');
 const path = require('path');
 const http = require('http');
 
@@ -29,6 +30,8 @@ const { createLogger } = require('./logger');
 const { startServer, startElevateMonitor } = require('../server/index');
 const { createTray } = require('./tray');
 const { createAutostart } = require('./autostart');
+const { createWidget } = require('./widget');
+const { resolveOpenAction } = require('./open-target');
 
 const paths = resolvePaths();
 const log = createLogger({ logDir: paths.logDir, name: 'main' });
@@ -36,6 +39,11 @@ const log = createLogger({ logDir: paths.logDir, name: 'main' });
 let mainWindow = null;
 let embeddedPort = null;
 let isQuitting = false;
+
+// Phase 3：小组件
+let widgetVisible = true;
+let widgetHandle = null;
+const WIDGET_STATE_FILE = path.join(paths.dataDir, 'widget-state.json');
 
 function tryListen(port) {
   return new Promise((resolve, reject) => {
@@ -61,7 +69,12 @@ function createWindow() {
     width: 1280,
     height: 800,
     show: !hidden, // --hidden（自启/静默）时不显示窗口，仅进托盘
-    webPreferences: { contextIsolation: true, nodeIntegration: false },
+    webPreferences: {
+      contextIsolation: true,
+      nodeIntegration: false,
+      // 提供 window.desktopAPI.openPath（打开资源管理器）
+      preload: path.join(__dirname, 'main-preload.js'),
+    },
   });
   const url = isDev ? 'http://localhost:8000' : `http://localhost:${embeddedPort}`;
   mainWindow.loadURL(url);
@@ -104,6 +117,32 @@ function triggerScan() {
   req.end();
 }
 
+function toggleWidget(visible) {
+  widgetVisible = visible;
+  if (widgetHandle) widgetHandle.toggle(visible);
+  log.info('widget', '切换小组件显隐', { visible });
+}
+
+function createSystemWidget() {
+  widgetHandle = createWidget({
+    BrowserWindow,
+    Menu,
+    screen,
+    url: isDev ? 'http://localhost:8000/widget' : `http://localhost:${embeddedPort}/widget`,
+    stateFile: WIDGET_STATE_FILE,
+    showMain: showMainWindow,
+    // 小组件自身（右键菜单 / Alt+F4）隐藏或显示时，同步托盘勾选状态
+    onVisibilityChange: (visible) => {
+      widgetVisible = visible;
+      log.info('widget', '可见性变更，同步托盘状态', { visible });
+    },
+    isQuitting: () => isQuitting,
+    log,
+  });
+  widgetHandle.build();
+  log.info('widget', '小组件初始化完成', { visible: widgetVisible });
+}
+
 function createSystemTray() {
   const icon = nativeImage.createFromPath(path.join(__dirname, 'assets', 'tray.png'));
   const autostart = createAutostart({ app, log });
@@ -111,7 +150,7 @@ function createSystemTray() {
     Tray,
     Menu,
     icon,
-    getMenuState: () => ({ autostart: autostart.isEnabled() }),
+    getMenuState: () => ({ autostart: autostart.isEnabled(), widgetVisible }),
     onShow: showMainWindow,
     onScan: triggerScan,
     onToggleAutostart: () => {
@@ -119,6 +158,7 @@ function createSystemTray() {
       autostart.setEnabled(next);
       log.info('tray', '切换开机自启', { enabled: next });
     },
+    onToggleWidget: () => toggleWidget(!widgetVisible),
     onQuit: () => {
       isQuitting = true;
       log.info('tray', '用户选择退出应用');
@@ -128,6 +168,40 @@ function createSystemTray() {
   });
   return tray;
 }
+
+// Phase 3：widget 页面点击 → 打开主窗口（最小 IPC 通道）
+ipcMain.on('widget:open-main', () => {
+  log.info('widget', '收到 widget 点击，打开主窗口');
+  showMainWindow();
+});
+
+// 打开资源管理器：目录排行 / 趋势分析 / 大文件 三个页面共用
+ipcMain.handle('shell:open-path', async (_e, target) => {
+  const p = typeof target === 'string' ? target.trim() : '';
+  const action = resolveOpenAction(p);
+  log.info('shell', '收到打开请求', { target: p, action });
+  if (action === 'missing') {
+    log.warn('shell', '打开请求被拒：路径不存在或不可访问', { target: p });
+    return { ok: false, error: '路径不存在或不可访问' };
+  }
+  try {
+    if (action === 'folder') {
+      const err = await shell.openPath(p); // 成功返回空字符串，失败返回错误描述
+      if (err) {
+        log.warn('shell', '打开文件夹失败', { target: p, err });
+        return { ok: false, error: err };
+      }
+      log.info('shell', '已打开文件夹', { target: p });
+    } else {
+      shell.showItemInFolder(p); // 打开所在文件夹并选中该文件（失败无返回值可判）
+      log.info('shell', '已打开所在文件夹并选中文件', { target: p });
+    }
+    return { ok: true };
+  } catch (err) {
+    log.error('shell', '打开路径异常', { target: p, err: err.message });
+    return { ok: false, error: err.message };
+  }
+});
 
 async function bootstrap() {
   log.info('main', '启动', { isDev, scanOnStart, hidden });
@@ -155,6 +229,7 @@ async function bootstrap() {
   if (scanOnStart) log.info('main', '识别到 --scan-on-start（提权重扫）');
   startElevateMonitor();
   createWindow();
+  createSystemWidget();
   createSystemTray();
   if (hidden) log.info('window', '隐藏启动（自启/静默），仅驻留托盘');
   else log.info('window', '正常显示窗口');

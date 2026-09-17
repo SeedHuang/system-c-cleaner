@@ -70,6 +70,27 @@ test('buildElevateCommand 指向 relaunch-admin 脚本', () => {
   assert.ok(cmd.includes('relaunch-admin.ps1'));
 });
 
+test('buildElevateCommand 显式传入 FlagPath/ExePath（提权进程不继承环境变量）', () => {
+  const { buildElevateCommand } = require('../index.js');
+  const cmd = buildElevateCommand(12345, 'C:\\data\\.elevated-launch.flag', 'C:\\app\\CDriveCleaner.exe');
+  assert.ok(cmd.includes("'-FlagPath','C:\\data\\.elevated-launch.flag'"));
+  assert.ok(cmd.includes("'-ExePath','C:\\app\\CDriveCleaner.exe'"));
+});
+
+test('buildElevateCommand 未传路径时不追加可选参数', () => {
+  const { buildElevateCommand } = require('../index.js');
+  const cmd = buildElevateCommand(12345, '', '');
+  assert.ok(!cmd.includes('-FlagPath'));
+  assert.ok(!cmd.includes('-ExePath'));
+});
+
+test('buildElevateCommand 用 try/catch 暴露 UAC 拒绝（非 0 退出码）', () => {
+  const { buildElevateCommand } = require('../index.js');
+  const cmd = buildElevateCommand(12345, 'C:\\f', 'C:\\e.exe');
+  assert.ok(cmd.startsWith('try {'));
+  assert.ok(cmd.includes('exit 1'));
+});
+
 test('computePowerShellCandidate 拼接完整路径', () => {
   const { computePowerShellCandidate } = require('../index.js');
   assert.strictEqual(

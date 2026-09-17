@@ -1,8 +1,9 @@
-/** 字节数格式化为可读大小 */
+/** 字节数格式化为可读大小（增长量可能为负：按绝对值选单位，保留负号） */
 export function formatSize(bytes: number): string {
-  if (bytes >= 1 << 30) return `${(bytes / (1 << 30)).toFixed(1)} GB`;
-  if (bytes >= 1 << 20) return `${(bytes / (1 << 20)).toFixed(1)} MB`;
-  if (bytes >= 1 << 10) return `${(bytes / (1 << 10)).toFixed(1)} KB`;
+  const abs = Math.abs(bytes);
+  if (abs >= 1 << 30) return `${(bytes / (1 << 30)).toFixed(1)} GB`;
+  if (abs >= 1 << 20) return `${(bytes / (1 << 20)).toFixed(1)} MB`;
+  if (abs >= 1 << 10) return `${(bytes / (1 << 10)).toFixed(1)} KB`;
   return `${bytes} B`;
 }
 

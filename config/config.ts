@@ -24,5 +24,7 @@ export default defineConfig({
     { path: '/cleanup', name: '清理建议', component: './Cleanup' },
     { path: '/guide', name: '操作手册', component: './Guide' },
     { path: '/history', name: '历史快照', component: './History' },
+    // 桌面悬浮小组件页：无布局、不进主导航菜单
+    { path: '/widget', component: './Widget', layout: false },
   ],
 });

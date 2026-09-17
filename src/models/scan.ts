@@ -40,5 +40,27 @@ export default function useScanModel() {
     refresh();
   }, [refresh]);
 
+  // 轮询 /api/status：托盘/后台触发的扫描，主窗口也能实时显示"扫描中"，
+  // 并在扫描结束的那一刻自动拉取最新结果（否则页面仍显示旧数据）
+  useEffect(() => {
+    let cancelled = false;
+    let wasScanning = false;
+    const poll = async () => {
+      try {
+        const st = await getStatus();
+        if (cancelled) return;
+        const now = !!st.scanning;
+        if (wasScanning && !now) refresh();
+        wasScanning = now;
+        setScanning(now);
+      } catch {
+        /* 网络异常忽略，下轮再试 */
+      }
+    };
+    poll();
+    const t = setInterval(poll, 3000);
+    return () => { cancelled = true; clearInterval(t); };
+  }, [refresh]);
+
   return { data, scanning, loading, error, refresh, startScan };
 }

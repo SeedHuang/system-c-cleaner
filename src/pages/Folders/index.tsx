@@ -3,6 +3,7 @@ import { useModel } from '@umijs/max';
 import { Button, Card, Empty, Input, Spin, Table, Tag } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { SearchOutlined } from '@ant-design/icons';
+import PathLink from '@/components/PathLink';
 import type { ScanItem } from '@/services/scan';
 import { cleanupLevels } from '@/setup/theme';
 import { formatGB } from '@/utils/format';
@@ -30,7 +31,7 @@ export default function FoldersPage() {
       dataIndex: 'path',
       key: 'path',
       ellipsis: true,
-      render: (v: string) => <span className="path-text">{v}</span>,
+      render: (v: string) => <PathLink path={v} className="path-text" />,
     },
     {
       title: '大小',

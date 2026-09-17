@@ -1,6 +1,7 @@
 import { useModel } from '@umijs/max';
 import { Button, Card, Empty, Spin, Table } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
+import PathLink from '@/components/PathLink';
 import type { LargeFile } from '@/services/scan';
 import { formatGB } from '@/utils/format';
 
@@ -22,6 +23,13 @@ const columns: ColumnsType<LargeFile> = [
     sorter: (a, b) => a.sizeGB - b.sizeGB,
     defaultSortOrder: 'descend',
     render: (v: number) => formatGB(v),
+  },
+  {
+    title: '操作',
+    key: 'action',
+    width: 60,
+    align: 'center',
+    render: (_, r) => <PathLink path={r.path} variant="button" title={`打开所在文件夹：${r.path}`} />,
   },
 ];
 

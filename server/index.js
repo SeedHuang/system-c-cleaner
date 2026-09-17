@@ -166,9 +166,27 @@ function scanOnce() {
     });
 }
 
-/** 构造触发 UAC 提权的命令（纯函数，可单测） */
-function buildElevateCommand(pid) {
-  return `Start-Process -FilePath '${PS_EXE}' -Verb RunAs -WindowStyle Hidden -ArgumentList '-NoProfile','-ExecutionPolicy','Bypass','-File','${ELEVATE_SCRIPT}','-OldPid','${pid}'`;
+/**
+ * 构造触发 UAC 提权的命令（纯函数，可单测）
+ * 关键：提权进程由 UAC 重新创建，**不会继承调用者的环境变量**，
+ * 因此 flag 路径与 exe 路径必须通过命令行显式传入，
+ * 否则 relaunch-admin.ps1 里的 $env:CLEANER_* 全为空，flag 会写到错误位置。
+ */
+function buildElevateCommand(pid, flagPath, exePath) {
+  const parts = [
+    "'-NoProfile'",
+    "'-ExecutionPolicy'",
+    "'Bypass'",
+    "'-File'",
+    `'${ELEVATE_SCRIPT}'`,
+    "'-OldPid'",
+    `'${pid}'`,
+  ];
+  if (flagPath) parts.push("'-FlagPath'", `'${flagPath}'`);
+  if (exePath) parts.push("'-ExePath'", `'${exePath}'`);
+  const start = `Start-Process -FilePath '${PS_EXE}' -Verb RunAs -WindowStyle Hidden -ArgumentList ${parts.join(',')}`;
+  // UAC 被拒绝时 Start-Process 抛错：用非 0 退出码告知调用方，避免白等 60 秒才允许重试
+  return `try { ${start} } catch { Write-Output $_.Exception.Message; exit 1 }`;
 }
 
 // ---- 路由 ----
@@ -260,7 +278,10 @@ async function handle(req, res) {
 
     if (req.method === 'POST' && p === '/api/elevate-restart') {
       if (elevatedScan === 'running') {
-        sendJson(res, 409, { error: '提权重启正在进行中，请稍候' });
+        log.warn('elevate', '提权请求重复到达，仍在上一次授权等待窗口内', {
+          waitMs: Date.now() - elevateStartedAt,
+        });
+        sendJson(res, 409, { error: '提权请求已在进行中，请先在系统授权窗口完成授权' });
         return;
       }
       if (fs.existsSync(ELEVATE_FLAG)) {
@@ -268,12 +289,30 @@ async function handle(req, res) {
       }
       elevatedScan = 'running';
       elevateStartedAt = Date.now();
-      spawn(
+      const elevateCmd = buildElevateCommand(process.pid, ELEVATE_FLAG, process.env.CLEANER_EXE_PATH || '');
+      log.info('elevate', '收到提权重启请求，等待 UAC 授权', {
+        pid: process.pid,
+        flagPath: ELEVATE_FLAG,
+        exePath: process.env.CLEANER_EXE_PATH || '(未注入，走开发回退)',
+      });
+      const child = spawn(
         PS_EXE,
-        ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', buildElevateCommand(process.pid)],
+        ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', elevateCmd],
         { windowsHide: true },
       );
-      log.info('elevate', '收到提权重启请求，等待 UAC 授权');
+      // UAC 被用户拒绝时该 powershell 会很快非 0 退出且不会写 flag → 立即判定为取消
+      child.on('error', (err) => {
+        log.error('elevate', '启动提权命令失败', err);
+      });
+      child.on('exit', (code) => {
+        log.info('elevate', '提权引导进程已退出', { code });
+        if (elevatedScan !== 'running') return;
+        if (fs.existsSync(ELEVATE_FLAG)) return; // 授权成功，等 monitor 退出旧进程
+        if (code !== 0) {
+          elevatedScan = 'cancelled';
+          log.warn('elevate', 'UAC 授权被拒绝，可重试');
+        }
+      });
       sendJson(res, 200, { ok: true, elevatedScan });
       return;
     }
@@ -302,15 +341,19 @@ function startServer(port = PORT) {
   return server;
 }
 
-/** 监控提权确认标志：确认后旧进程退出，由提权服务接管 8090（仅主进程入口调用） */
+/**
+ * 监控提权确认标志：确认后旧进程退出，由提权服务接管 8090（仅主进程入口调用）
+ * 判定只看 flag 文件本身（不看 elevatedScan）：即使引导进程被误判为取消，
+ * 只要 flag 真的出现就仍要退出，否则端口不释放会拖垮提权进程。
+ */
 function startElevateMonitor() {
   if (SCAN_ON_START) return;
   setInterval(() => {
-    if (elevatedScan !== 'running') return;
+    if (elevatedScan === 'idle') return;
     if (fs.existsSync(ELEVATE_FLAG)) {
       log.info('elevate', '已确认提权，旧进程 1 秒后退出');
       setTimeout(() => process.exit(0), 1000);
-    } else if (Date.now() - elevateStartedAt > 60000) {
+    } else if (elevatedScan === 'running' && Date.now() - elevateStartedAt > 60000) {
       elevatedScan = 'cancelled';
       log.warn('elevate', '提权未确认（UAC 可能被取消），保持当前进程');
     }
