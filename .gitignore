@@ -9,3 +9,8 @@ scan-result.json
 history/
 logs/
 dist_electron/
+.electron-cache/
+.electron-builder-cache/
+.electron-dev/
+backup/
+ 
