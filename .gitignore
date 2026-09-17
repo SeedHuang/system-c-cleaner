@@ -7,3 +7,5 @@ scan-result.json
 .DS_Store
 *.local
 history/
+logs/
+dist_electron/

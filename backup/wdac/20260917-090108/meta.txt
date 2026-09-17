@@ -1,0 +1,4 @@
+backup_time: 20260917-090108
+source_dir: C:\Windows\System32\CodeIntegrity\CIPolicies\Active
+policy_count: 8
+restore_cmd: powershell -ExecutionPolicy Bypass -File "D:\Seed\system-c-cleaner\scripts\wdac-restore.ps1" -BackupDir "D:\Seed\system-c-cleaner\backup\wdac\20260917-090108"

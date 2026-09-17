@@ -1,0 +1,170 @@
+﻿绛栫暐:
+    绛栫暐 ID: 0283ac0f-fff1-49ae-ada1-8a933130cad6
+    鍩烘湰绛栫暐 ID锛?0283ac0f-fff1-49ae-ada1-8a933130cad6
+    濂借鐨勫悕绉? VerifiedAndReputableDesktop
+    鐗堟湰: 0.0.0.0
+    骞冲彴绛栫暐锛?true
+    绛栫暐宸茬鍚? true
+    纾佺洏涓婃湁鏂囦欢锛?true
+    褰撳墠寮哄埗鎵ц锛?true
+    鎺堟潈锛?true
+    鐘舵€侊細 0
+
+绛栫暐:
+    绛栫暐 ID: 1283ac0f-fff1-49ae-ada1-8a933130cad6
+    鍩烘湰绛栫暐 ID锛?1283ac0f-fff1-49ae-ada1-8a933130cad6
+    濂借鐨勫悕绉? VerifiedAndReputableDesktopEvaluation
+    鐗堟湰: 0.0.0.0
+    骞冲彴绛栫暐锛?true
+    绛栫暐宸茬鍚? true
+    纾佺洏涓婃湁鏂囦欢锛?true
+    褰撳墠寮哄埗鎵ц锛?false
+    鎺堟潈锛?false
+    鐘舵€侊細 0
+
+绛栫暐:
+    绛栫暐 ID: 784c4414-79f4-4c32-a6a5-f0fb42a51d0d
+    鍩烘湰绛栫暐 ID锛?784c4414-79f4-4c32-a6a5-f0fb42a51d0d
+    濂借鐨勫悕绉? Microsoft Windows Cross Certificates for Code Integrity Exceptions Audit Policy
+    鐗堟湰: 10.29611.0.0
+    骞冲彴绛栫暐锛?true
+    绛栫暐宸茬鍚? true
+    纾佺洏涓婃湁鏂囦欢锛?true
+    褰撳墠寮哄埗鎵ц锛?true
+    鎺堟潈锛?true
+    鐘舵€侊細 0
+
+绛栫暐:
+    绛栫暐 ID: 82443e1e-8a39-4b4a-96a8-f40ddc00b9f3
+    鍩烘湰绛栫暐 ID锛?82443e1e-8a39-4b4a-96a8-f40ddc00b9f3
+    濂借鐨勫悕绉? WindowsE_Lockdown_Policy
+    鐗堟湰: 10.0.22117.0
+    骞冲彴绛栫暐锛?true
+    绛栫暐宸茬鍚? true
+    纾佺洏涓婃湁鏂囦欢锛?true
+    褰撳墠寮哄埗鎵ц锛?false
+    鎺堟潈锛?false
+    鐘舵€侊細 0
+
+绛栫暐:
+    绛栫暐 ID: cdd5cb55-db68-4d71-aa38-3df2b6473a52
+    鍩烘湰绛栫暐 ID锛?82443e1e-8a39-4b4a-96a8-f40ddc00b9f3
+    濂借鐨勫悕绉? WindowsE_Lockdown_Test_Policy_Supplemental
+    鐗堟湰: 10.0.21349.0
+    骞冲彴绛栫暐锛?true
+    绛栫暐宸茬鍚? true
+    纾佺洏涓婃湁鏂囦欢锛?true
+    褰撳墠寮哄埗鎵ц锛?false
+    鎺堟潈锛?false
+    鐘舵€侊細 0
+
+绛栫暐:
+    绛栫暐 ID: 5951a96a-e0b5-4d3d-8fb8-3e5b61030784
+    鍩烘湰绛栫暐 ID锛?5951a96a-e0b5-4d3d-8fb8-3e5b61030784
+    濂借鐨勫悕绉? Windows10S_Lockdown_Policy_Supplementable
+    鐗堟湰: 10.0.15039.0
+    骞冲彴绛栫暐锛?true
+    绛栫暐宸茬鍚? true
+    纾佺洏涓婃湁鏂囦欢锛?true
+    褰撳墠寮哄埗鎵ц锛?false
+    鎺堟潈锛?false
+    鐘舵€侊細 0
+
+绛栫暐:
+    绛栫暐 ID: 1678656c-05ef-481f-bc5b-ebd8c991502d
+    鍩烘湰绛栫暐 ID锛?0283ac0f-fff1-49ae-ada1-8a933130cad6
+    濂借鐨勫悕绉? VerifiedAndReputableDesktopFlightSupplemental
+    鐗堟湰: 0.0.0.0
+    骞冲彴绛栫暐锛?true
+    绛栫暐宸茬鍚? true
+    纾佺洏涓婃湁鏂囦欢锛?true
+    褰撳墠寮哄埗鎵ц锛?true
+    鎺堟潈锛?true
+    鐘舵€侊細 0
+
+绛栫暐:
+    绛栫暐 ID: 2678656c-05ef-481f-bc5b-ebd8c991502d
+    鍩烘湰绛栫暐 ID锛?1283ac0f-fff1-49ae-ada1-8a933130cad6
+    濂借鐨勫悕绉? VerifiedAndReputableDesktopEvaluationFlightSupplemental
+    鐗堟湰: 0.0.0.0
+    骞冲彴绛栫暐锛?true
+    绛栫暐宸茬鍚? true
+    纾佺洏涓婃湁鏂囦欢锛?true
+    褰撳墠寮哄埗鎵ц锛?false
+    鎺堟潈锛?false
+    鐘舵€侊細 0
+
+绛栫暐:
+    绛栫暐 ID: 5dac656c-21ad-4a02-ab49-649917162e70
+    鍩烘湰绛栫暐 ID锛?82443e1e-8a39-4b4a-96a8-f40ddc00b9f3
+    濂借鐨勫悕绉? WindowsE_Lockdown_Flight_Policy_Supplemental
+    鐗堟湰: 10.0.21325.0
+    骞冲彴绛栫暐锛?true
+    绛栫暐宸茬鍚? true
+    纾佺洏涓婃湁鏂囦欢锛?true
+    褰撳墠寮哄埗鎵ц锛?false
+    鎺堟潈锛?false
+    鐘舵€侊細 0
+
+绛栫暐:
+    绛栫暐 ID: d2bda982-ccf6-4344-ac5b-0b44427b6816
+    鍩烘湰绛栫暐 ID锛?d2bda982-ccf6-4344-ac5b-0b44427b6816
+    濂借鐨勫悕绉? Microsoft Windows Driver Policy
+    鐗堟湰: 10.0.29520.0
+    骞冲彴绛栫暐锛?true
+    绛栫暐宸茬鍚? true
+    纾佺洏涓婃湁鏂囦欢锛?false
+    褰撳墠寮哄埗鎵ц锛?true
+    鎺堟潈锛?true
+    鐘舵€侊細 0
+
+绛栫暐:
+    绛栫暐 ID: 0939ed82-bfd5-4d32-b58e-d31d3c49715a
+    鍩烘湰绛栫暐 ID锛?0283ac0f-fff1-49ae-ada1-8a933130cad6
+    濂借鐨勫悕绉? VerifiedAndReputableDesktopTestSupplemental
+    鐗堟湰: 0.0.0.0
+    骞冲彴绛栫暐锛?true
+    绛栫暐宸茬鍚? true
+    纾佺洏涓婃湁鏂囦欢锛?true
+    褰撳墠寮哄埗鎵ц锛?false
+    鎺堟潈锛?false
+    鐘舵€侊細 0
+
+绛栫暐:
+    绛栫暐 ID: 1939ed82-bfd5-4d32-b58e-d31d3c49715a
+    鍩烘湰绛栫暐 ID锛?1283ac0f-fff1-49ae-ada1-8a933130cad6
+    濂借鐨勫悕绉? VerifiedAndReputableDesktopEvaluationTestSupplemental
+    鐗堟湰: 0.0.0.0
+    骞冲彴绛栫暐锛?true
+    绛栫暐宸茬鍚? true
+    纾佺洏涓婃湁鏂囦欢锛?true
+    褰撳墠寮哄埗鎵ц锛?false
+    鎺堟潈锛?false
+    鐘舵€侊細 0
+
+绛栫暐:
+    绛栫暐 ID: a072029f-588b-4b5e-b7f9-05aad67df687
+    鍩烘湰绛栫暐 ID锛?a072029f-588b-4b5e-b7f9-05aad67df687
+    濂借鐨勫悕绉? Microsoft Windows Virtualization Based Security Policy
+    鐗堟湰: 10.0.29657.0
+    骞冲彴绛栫暐锛?true
+    绛栫暐宸茬鍚? true
+    纾佺洏涓婃湁鏂囦欢锛?true
+    褰撳墠寮哄埗鎵ц锛?true
+    鎺堟潈锛?true
+    鐘舵€侊細 0
+
+绛栫暐:
+    绛栫暐 ID: 60fd87f8-4593-44a0-91b0-2e0da022f248
+    鍩烘湰绛栫暐 ID锛?60fd87f8-4593-44a0-91b0-2e0da022f248
+    濂借鐨勫悕绉? Microsoft Windows Endpoint Security Policy
+    鐗堟湰: 10.0.29526.0
+    骞冲彴绛栫暐锛?true
+    绛栫暐宸茬鍚? true
+    纾佺洏涓婃湁鏂囦欢锛?true
+    褰撳墠寮哄埗鎵ц锛?true
+    鎺堟潈锛?true
+    鐘舵€侊細 0
+
+鎿嶄綔鎴愬姛
+鎸?Enter 缁х画

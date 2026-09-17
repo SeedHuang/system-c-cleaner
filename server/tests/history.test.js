@@ -184,3 +184,11 @@ test('computeGrowthTrend 历史序列', async () => {
   assert.strictEqual(r.points.length, 2);
   assert.strictEqual(r.points[1].size, 800);
 });
+
+test('resolvePaths.historyDir 与 HISTORY_DIR 一致（可配置）', () => {
+  const { resolvePaths } = require('../config.js');
+  const history = require('../history.js');
+  const p = resolvePaths({ CLEANER_DATA_DIR: 'D:/ud' });
+  // 偏差：简报断言 'D:/ud/history'，但 Windows 上 path.join 会把正斜杠规范化为反斜杠（'D:\\ud\\history'）
+  assert.strictEqual(p.historyDir, path.join('D:/ud', 'history'));
+});

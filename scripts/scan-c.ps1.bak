@@ -16,8 +16,6 @@ $ProgressPreference   = 'SilentlyContinue'
 
 # ---------- config ----------
 $resultPath = Join-Path (Split-Path $PSScriptRoot -Parent) 'scan-result.json'
-# 打包后由 Electron 主进程注入：结果写入 userData（安装目录可能不可写）
-if ($env:CLEANER_RESULT_PATH) { $resultPath = $env:CLEANER_RESULT_PATH }
 $root       = 'C:\'
 $bigFileMinMB = 100
 $bigFileTop   = 50

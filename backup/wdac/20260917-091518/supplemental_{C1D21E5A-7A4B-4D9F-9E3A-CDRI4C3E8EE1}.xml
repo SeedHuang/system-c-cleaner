@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<SiPolicy xmlns="urn:schemas-microsoft-com:sipolicy">
+  <VersionEx>1.0</VersionEx>
+  <PlatformID>{2E07F7E4-194C-4D20-B7C9-1F33D8410000}</PlatformID>
+  <PolicyID>{C1D21E5A-7A4B-4D9F-9E3A-CDRI4C3E8EE1}</PolicyID>
+  <BasePolicyID>{C1D21E5A-7A4B-4D9F-9E3A-CDRI4C3E8EE1}</BasePolicyID>
+  <PolicyType>Supplemental</PolicyType>
+  <Rules>
+    <Rule>
+      <Option>Enabled:Unsigned System Integrity Policy</Option>
+    </Rule>
+    <Rule>
+      <Option>Enabled:Allow Supplemental Policies</Option>
+    </Rule>
+  </Rules>
+  <FileRules>
+    <Allow FilePath="\D:\\Seed\\system-c-cleaner\\dist_electron\\win-unpacked\*" />
+    <Allow FilePath="\D:\\Seed\\system-c-cleaner\\dist_electron\\win-unpacked" />
+  </FileRules>
+</SiPolicy>

@@ -46,3 +46,29 @@ test('buildElevateCommand 构造 UAC 命令', () => {
   assert.ok(cmd.includes('-Verb RunAs'));
   assert.ok(cmd.includes("'-OldPid','12345'"));
 });
+
+test('startElevateMonitor 存在且为函数', () => {
+  const { startElevateMonitor } = require('../index.js');
+  assert.strictEqual(typeof startElevateMonitor, 'function');
+});
+
+test('buildElevateCommand 指向 relaunch-admin 脚本', () => {
+  const { buildElevateCommand } = require('../index.js');
+  const cmd = buildElevateCommand(999);
+  assert.ok(cmd.includes('relaunch-admin.ps1'));
+});
+
+test('computePowerShellCandidate 拼接完整路径', () => {
+  const { computePowerShellCandidate } = require('../index.js');
+  assert.strictEqual(
+    computePowerShellCandidate('C:\\Windows'),
+    'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe',
+  );
+});
+
+test('resolvePowerShellPath 返回非空字符串', () => {
+  const { resolvePowerShellPath } = require('../index.js');
+  const p = resolvePowerShellPath();
+  assert.strictEqual(typeof p, 'string');
+  assert.ok(p.length > 0);
+});

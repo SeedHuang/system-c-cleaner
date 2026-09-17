@@ -9,8 +9,11 @@ const fs = require('fs');
 const path = require('path');
 const zlib = require('zlib');
 
-const ROOT = path.join(__dirname, '..');
-const HISTORY_DIR = path.join(ROOT, 'history');
+const { resolvePaths } = require('./config');
+
+const paths = resolvePaths();
+const ROOT = paths.root;
+const HISTORY_DIR = paths.historyDir;
 
 const GB = 1024 ** 3;
 

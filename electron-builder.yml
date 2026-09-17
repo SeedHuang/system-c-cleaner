@@ -1,0 +1,20 @@
+appId: com.seed.cdrivecleaner
+productName: CDriveCleaner
+directories:
+  output: dist_electron
+files:
+  - dist/**
+  - server/**
+  - electron/**
+  - "!server/tests/**"
+  - package.json
+extraResources:
+  - from: scripts
+    to: scripts
+win:
+  target:
+    - nsis
+nsis:
+  oneClick: true
+  perMachine: false
+  artifactName: CDriveCleaner-Setup-${version}.exe

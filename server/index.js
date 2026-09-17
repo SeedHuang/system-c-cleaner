@@ -14,17 +14,34 @@ const fs = require('fs');
 const path = require('path');
 const { spawn } = require('child_process');
 const history = require('./history');
+const { resolvePaths } = require('./config');
+const { createLogger } = require('../electron/logger');
 
+const paths = resolvePaths();
 const PORT = process.env.PORT || 8090;
-const ROOT = path.join(__dirname, '..');
-const RESULT_FILE = path.join(ROOT, 'scan-result.json');
-const PS_SCRIPT = path.join(ROOT, 'scripts', 'scan-c.ps1');
-const DIST_DIR = path.join(ROOT, 'dist');
-const ELEVATE_SCRIPT = path.join(ROOT, 'scripts', 'relaunch-admin.ps1');
-const ELEVATE_FLAG = path.join(ROOT, 'history', '.elevated-launch.flag');
+const RESULT_FILE = paths.resultFile;
+const PS_SCRIPT = paths.psScript;
+const DIST_DIR = path.join(paths.root, 'dist');
+const ELEVATE_SCRIPT = paths.elevateScript;
+const ELEVATE_FLAG = paths.elevateFlag;
+const log = createLogger({ logDir: paths.logDir, name: 'server' });
 
 // 以管理员身份启动时自动重扫一次
 const SCAN_ON_START = process.argv.includes('--scan-on-start');
+
+/** 拼接 PowerShell 完整路径（纯函数，可单测） */
+function computePowerShellCandidate(sysRoot) {
+  return path.join(sysRoot, 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe');
+}
+
+/** 打包后 Electron 环境的 PATH 可能不含 powershell.exe，优先用完整路径，回退裸命令 */
+function resolvePowerShellPath() {
+  const candidate = computePowerShellCandidate(process.env.SystemRoot || 'C:\\Windows');
+  return fs.existsSync(candidate) ? candidate : 'powershell.exe';
+}
+
+// 打包版（Electron GUI 启动）PATH 可能不含 powershell.exe，统一用解析出的完整路径
+const PS_EXE = resolvePowerShellPath();
 
 let scanning = false;
 let elevatedScan = 'idle'; // idle | running | cancelled
@@ -36,7 +53,8 @@ function readJson(file) {
     // PowerShell WriteAllText 可能写出 BOM，JSON.parse 前必须去掉
     const raw = fs.readFileSync(file, 'utf8').replace(/^\uFEFF/, '');
     return JSON.parse(raw);
-  } catch {
+  } catch (err) {
+    log.warn('json', '读取/解析失败，返回 null', { file, err: err.message });
     return null;
   }
 }
@@ -53,21 +71,31 @@ function sendJson(res, code, payload) {
 /** 调用 PowerShell 扫描脚本，返回 Promise */
 function runScan() {
   return new Promise((resolve, reject) => {
+    log.info('scan', '扫描开始', { script: PS_SCRIPT });
+    const startedAt = Date.now();
     const ps = spawn(
-      'powershell.exe',
+      PS_EXE,
       ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', PS_SCRIPT],
-      { cwd: ROOT, windowsHide: true },
+      // cwd 必须为真实目录：打包后 paths.root 是 app.asar 内路径，作工作目录会导致 spawn ENOENT
+      { cwd: paths.dataDir, windowsHide: true, env: { ...process.env, CLEANER_RESULT_PATH: RESULT_FILE } },
     );
     let stdout = '';
     let stderr = '';
     ps.stdout.on('data', (d) => (stdout += d.toString()));
     ps.stderr.on('data', (d) => (stderr += d.toString()));
-    ps.on('error', reject);
+    ps.on('error', (err) => {
+      log.error('scan', '扫描进程启动失败', err);
+      reject(err);
+    });
     ps.on('close', (code) => {
       if (code === 0 && fs.existsSync(RESULT_FILE)) {
+        const size = fs.statSync(RESULT_FILE).size;
+        log.info('scan', '扫描完成', { exit: code, resultSize: size, elapsedMs: Date.now() - startedAt });
         resolve(readJson(RESULT_FILE));
       } else {
-        reject(new Error(`扫描失败 (exit ${code}): ${stderr || stdout}`));
+        const err = new Error(`扫描失败 (exit ${code}): ${stderr || stdout}`);
+        log.error('scan', '扫描失败', err);
+        reject(err);
       }
     });
   });
@@ -78,7 +106,12 @@ function readBody(req) {
     let body = '';
     req.on('data', (d) => (body += d));
     req.on('end', () => {
-      try { resolve(body ? JSON.parse(body) : {}); } catch { resolve({}); }
+      try {
+        resolve(body ? JSON.parse(body) : {});
+      } catch (err) {
+        log.warn('api', '请求体 JSON 解析失败，按空对象处理', { err: err.message });
+        resolve({});
+      }
     });
   });
 }
@@ -115,7 +148,7 @@ function serveStatic(req, res) {
 function scanOnce() {
   if (scanning) return;
   scanning = true;
-  console.log('[server] 管理员模式启动，自动重新扫描…');
+  log.info('scan', '管理员模式启动，自动重新扫描');
   runScan()
     .then(async (data) => {
       let snapshotWarning = null;
@@ -123,11 +156,11 @@ function scanOnce() {
         await history.buildSnapshot({ scannedAt: data.scannedAt, disk: data.disk });
       } catch (e) {
         snapshotWarning = `历史快照记录失败: ${e.message}`;
-        console.warn('[history]', snapshotWarning);
+        log.warn('scan', snapshotWarning);
       }
-      console.log('[server] 自动扫描完成');
+      log.info('scan', '自动扫描完成');
     })
-    .catch((err) => console.error('[server] 自动扫描失败:', err.message))
+    .catch((err) => log.error('scan', '自动扫描失败', err))
     .finally(() => {
       scanning = false;
     });
@@ -135,15 +168,17 @@ function scanOnce() {
 
 /** 构造触发 UAC 提权的命令（纯函数，可单测） */
 function buildElevateCommand(pid) {
-  return `Start-Process -FilePath 'powershell.exe' -Verb RunAs -WindowStyle Hidden -ArgumentList '-NoProfile','-ExecutionPolicy','Bypass','-File','${ELEVATE_SCRIPT}','-OldPid','${pid}'`;
+  return `Start-Process -FilePath '${PS_EXE}' -Verb RunAs -WindowStyle Hidden -ArgumentList '-NoProfile','-ExecutionPolicy','Bypass','-File','${ELEVATE_SCRIPT}','-OldPid','${pid}'`;
 }
 
 // ---- 路由 ----
 async function handle(req, res) {
+  const url = new URL(req.url, 'http://x');
+  const p = url.pathname;
+  res.on('finish', () => {
+    if (p.startsWith('/api/')) log.info('api', `${req.method} ${p} -> ${res.statusCode}`);
+  });
   try {
-    const url = new URL(req.url, 'http://x');
-    const p = url.pathname;
-
     if (req.method === 'GET' && p === '/api/status') {
       const data = readJson(RESULT_FILE);
       sendJson(res, 200, {
@@ -211,7 +246,7 @@ async function handle(req, res) {
             await history.buildSnapshot({ scannedAt: data.scannedAt, disk: data.disk });
           } catch (e) {
             snapshotWarning = `历史快照记录失败: ${e.message}`;
-            console.warn('[history]', snapshotWarning);
+            log.warn('scan', snapshotWarning);
           }
           scanning = false;
           sendJson(res, 200, { ok: true, ...data, snapshotWarning });
@@ -229,16 +264,16 @@ async function handle(req, res) {
         return;
       }
       if (fs.existsSync(ELEVATE_FLAG)) {
-        try { fs.unlinkSync(ELEVATE_FLAG); } catch {}
+        try { fs.unlinkSync(ELEVATE_FLAG); } catch (err) { log.warn('elevate', '删除提权标志失败（忽略）', { err: err.message }); }
       }
       elevatedScan = 'running';
       elevateStartedAt = Date.now();
       spawn(
-        'powershell.exe',
+        PS_EXE,
         ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', buildElevateCommand(process.pid)],
         { windowsHide: true },
       );
-      console.log('[server] 已请求以管理员身份重启，等待 UAC 授权…');
+      log.info('elevate', '收到提权重启请求，等待 UAC 授权');
       sendJson(res, 200, { ok: true, elevatedScan });
       return;
     }
@@ -250,37 +285,41 @@ async function handle(req, res) {
 
     serveStatic(req, res);
   } catch (e) {
+    log.error('api', `接口异常 ${req.method} ${p}`, e);
     sendJson(res, 500, { error: e.message });
   }
 }
 
 function startServer(port = PORT) {
   if (fs.existsSync(ELEVATE_FLAG)) {
-    try { fs.unlinkSync(ELEVATE_FLAG); } catch {}
+    try { fs.unlinkSync(ELEVATE_FLAG); } catch (err) { log.warn('elevate', '启动时删除提权标志失败（忽略）', { err: err.message }); }
   }
   const server = http.createServer(handle);
   server.listen(port, () => {
-    console.log(`[server] C盘分析 API 服务已启动: http://localhost:${port}`);
+    log.info('server', 'API 服务已启动', { url: `http://localhost:${port}` });
     if (SCAN_ON_START) scanOnce();
   });
   return server;
 }
 
+/** 监控提权确认标志：确认后旧进程退出，由提权服务接管 8090（仅主进程入口调用） */
+function startElevateMonitor() {
+  if (SCAN_ON_START) return;
+  setInterval(() => {
+    if (elevatedScan !== 'running') return;
+    if (fs.existsSync(ELEVATE_FLAG)) {
+      log.info('elevate', '已确认提权，旧进程 1 秒后退出');
+      setTimeout(() => process.exit(0), 1000);
+    } else if (Date.now() - elevateStartedAt > 60000) {
+      elevatedScan = 'cancelled';
+      log.warn('elevate', '提权未确认（UAC 可能被取消），保持当前进程');
+    }
+  }, 1000);
+}
+
 if (require.main === module) {
   startServer(PORT);
-  // 非提权模式下监控提权确认标志：确认后本服务退出，由提权服务接管 8090
-  if (!SCAN_ON_START) {
-    setInterval(() => {
-      if (elevatedScan !== 'running') return;
-      if (fs.existsSync(ELEVATE_FLAG)) {
-        console.log('[server] 已确认提权，旧服务 1 秒后退出，由管理员服务接管');
-        setTimeout(() => process.exit(0), 1000);
-      } else if (Date.now() - elevateStartedAt > 60000) {
-        elevatedScan = 'cancelled';
-        console.log('[server] 提权未确认（UAC 可能被取消），保持当前服务');
-      }
-    }, 1000);
-  }
+  startElevateMonitor();
 } else {
-  module.exports = { startServer, buildElevateCommand };
+  module.exports = { startServer, buildElevateCommand, startElevateMonitor, computePowerShellCandidate, resolvePowerShellPath };
 }
