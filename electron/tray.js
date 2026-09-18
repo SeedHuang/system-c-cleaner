@@ -6,7 +6,7 @@ function createTray({ Tray, Menu, icon, getMenuState, onShow, onScan, onToggleAu
   let tray;
   try {
     tray = new Tray(icon);
-    tray.setToolTip('CDriveCleaner - C 盘空间分析');
+    tray.setToolTip('Roberta');
 
     const buildMenu = () => {
       const state = getMenuState();

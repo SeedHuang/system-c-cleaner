@@ -41,7 +41,7 @@ function makeHarness({ autostart = false, widgetVisible = true, autoScan = true,
 test('创建 Tray 并设置 tooltip', () => {
   const h = makeHarness();
   assert.ok(h.tray !== null);
-  assert.strictEqual(h.getLastTray().tooltip, 'CDriveCleaner - C 盘空间分析');
+  assert.strictEqual(h.getLastTray().tooltip, 'Roberta');
   assert.strictEqual(h.getLastTray().icon, 'tray.png');
 });
 

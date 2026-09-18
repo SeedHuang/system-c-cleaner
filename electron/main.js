@@ -1,5 +1,5 @@
 /**
- * CDriveCleaner 主进程
+ * Roberta 主进程
  * 开发：内嵌 server(8090) 失败则复用现有服务，窗口加载 http://localhost:8000（umi dev + proxy）
  * 生产：内嵌 server(8090 退避) 托管 asar 内 dist/，窗口加载 http://localhost:<实际端口>
  * Phase 2：系统托盘（关窗最小化、托盘菜单）、开机自启（--hidden 隐藏启动）、托盘立即扫描
@@ -117,6 +117,7 @@ function createWindow() {
     height: 800,
     show: !hidden, // --hidden（自启/静默）时不显示窗口，仅进托盘
     autoHideMenuBar: true, // 隐藏原生菜单栏（File/Edit/View…），按 Alt 也不显示
+    icon: path.join(__dirname, 'assets', 'app-icon.png'), // 窗口/任务栏图标（打包后在 asar 内可读）
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: false,
@@ -332,11 +333,12 @@ app.whenReady().then(() => {
     log.warn('main', '移除原生菜单栏失败', { err: err.message });
   }
 
-  // T12：从 %APPDATA%\c-drive-cleaner 一次性迁移数据到 %USERPROFILE%\.system-c-cleaner。
+  // T12：从旧版 %APPDATA%\c-drive-cleaner 一次性迁移数据到 %USERPROFILE%\.system-c-cleaner。
   // 失败不阻塞启动（best-effort），所有异常吞掉并记 log。
   if (!isDev) {
     try {
-      const oldDir = app.getPath('userData'); // %APPDATA%\c-drive-cleaner
+      // 应用更名 Roberta 后 userData 已指向 %APPDATA%\Roberta，旧数据目录需显式指定
+      const oldDir = path.join(app.getPath('appData'), 'c-drive-cleaner'); // 旧版数据目录
       const newDir = process.env.CLEANER_DATA_DIR; // %USERPROFILE%\.system-c-cleaner（已注入）
       runMigrate({ oldDir, newDir, log }).then((r) => {
         if (r.migrated) log.info('main', '数据已迁移到新位置', { oldDir, newDir });
@@ -348,9 +350,9 @@ app.whenReady().then(() => {
       log.warn('main', '迁移调度失败', { err: err.message });
     }
   }
-  // Windows 通知需要 AppUserModelID，才能显示为「CDriveCleaner」而不是 Electron
+  // Windows 通知需要 AppUserModelID，才能显示为「Roberta」而不是 Electron
   try {
-    app.setAppUserModelId('com.seed.cdrivecleaner');
+    app.setAppUserModelId('com.seed.roberta');
   } catch (err) {
     log.warn('main', '设置 AppUserModelID 失败（通知将显示 Electron 名称）', { err: err.message });
   }

@@ -1,4 +1,4 @@
-# C 盘空间分析工具（CDriveCleaner）
+# Roberta（C 盘空间分析工具）
 
 基于 **Electron + umi/max + antd5** 的 Windows 桌面应用，用于分析 C 盘空间占用（磁盘总览 / 文件夹分布 / 大文件排行 / 历史趋势）。
 
@@ -106,7 +106,7 @@ electron_builder_binaries_mirror=https://npmmirror.com/mirrors/electron-builder-
 
 | 命令 | 作用 |
 |---|---|
-| `npm run electron:build` | 构建前端 → 生成 NSIS 一键安装包（`dist_electron/CDriveCleaner-Setup-*.exe`） |
+| `npm run electron:build` | 构建前端 → 生成 NSIS 一键安装包（`dist_electron/Roberta-Setup-*.exe`） |
 | `npm run electron:build-run` | 一键：构建前端 → 打包安装包 → 启动应用 |
 
 打包产物：
@@ -114,7 +114,7 @@ electron_builder_binaries_mirror=https://npmmirror.com/mirrors/electron-builder-
 ```
 dist_electron/
 ├── win-unpacked/              # 免安装绿色版（可直接运行）
-└── CDriveCleaner-Setup-0.1.0.exe  # 一键安装包
+└── Roberta-Setup-0.1.0.exe    # 一键安装包
 ```
 
 **打包缓存**（可删除，会重新下载；保留可加速打包）：
@@ -196,7 +196,7 @@ node scripts/migrate-data.js --help
 
 ### Windows Defender 应用控制（WDAC / Smart App Control）
 
-未签名的 `CDriveCleaner.exe` 可能被 **Smart App Control（SAC）** 或企业 WDAC 策略拦截（事件 ID 3077，提示签名级别不满足）。
+未签名的 `Roberta.exe` 可能被 **Smart App Control（SAC）** 或企业 WDAC 策略拦截（事件 ID 3077，提示签名级别不满足）。
 
 - 个人电脑：若开启 Smart App Control，需在「Windows 安全中心 → 应用和浏览器控制」中关闭（**单向操作，关闭后不可重开**）
 - 企业电脑：需由 IT 配置 WDAC 补充策略放行，或对安装包进行代码签名

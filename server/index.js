@@ -134,6 +134,7 @@ function serveStatic(req, res) {
       '.svg': 'image/svg+xml',
       '.ico': 'image/x-icon',
       '.json': 'application/json; charset=utf-8',
+      '.mp4': 'video/mp4',
     }[ext] || 'application/octet-stream';
     res.writeHead(200, { 'Content-Type': mime });
     fs.createReadStream(file).pipe(res);

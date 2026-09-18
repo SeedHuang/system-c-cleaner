@@ -1,7 +1,7 @@
 @echo off
 setlocal
 rem ============================================
-rem  CDriveCleaner build helper: build frontend,
+rem  Roberta build helper: build frontend,
 rem  package NSIS installer, then launch app.
 rem  Usage: npm run electron:build-run
 rem ============================================
@@ -30,18 +30,18 @@ if errorlevel 1 (
 )
 
 echo [2/4] Verifying outputs ...
-if not exist "%~dp0..\dist_electron\win-unpacked\CDriveCleaner.exe" (
-  echo [ERROR] CDriveCleaner.exe not found
+if not exist "%~dp0..\dist_electron\win-unpacked\Roberta.exe" (
+  echo [ERROR] Roberta.exe not found
   exit /b 1
 )
-if not exist "%~dp0..\dist_electron\CDriveCleaner-Setup-*.exe" (
+if not exist "%~dp0..\dist_electron\Roberta-Setup-*.exe" (
   echo [ERROR] NSIS installer not found
   exit /b 1
 )
 
 echo [3/4] Installer ready:
-for %%f in ("%~dp0..\dist_electron\CDriveCleaner-Setup-*.exe") do echo   %%f
+for %%f in ("%~dp0..\dist_electron\Roberta-Setup-*.exe") do echo   %%f
 
 echo [4/4] Launching app ...
-start "" "%~dp0..\dist_electron\win-unpacked\CDriveCleaner.exe"
+start "" "%~dp0..\dist_electron\win-unpacked\Roberta.exe"
 endlocal

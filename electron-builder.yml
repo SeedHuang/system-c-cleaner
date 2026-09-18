@@ -1,5 +1,5 @@
-appId: com.seed.cdrivecleaner
-productName: CDriveCleaner
+appId: com.seed.roberta
+productName: Roberta
 directories:
   output: dist_electron
 files:
@@ -13,9 +13,10 @@ extraResources:
   - from: scripts
     to: scripts
 win:
+  icon: build/icon.ico
   target:
     - nsis
 nsis:
   oneClick: true
   perMachine: false
-  artifactName: CDriveCleaner-Setup-${version}.exe
+  artifactName: Roberta-Setup-${version}.exe

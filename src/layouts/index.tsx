@@ -13,6 +13,7 @@ import {
 } from '@ant-design/icons';
 import { figmaColors } from '@/setup/theme';
 import { formatGB } from '@/utils/format';
+import robotAvatar from '../../assets/robot.mp4';
 
 const menuItems = [
   { key: '/dashboard', icon: <DashboardOutlined />, label: '概览' },
@@ -63,22 +64,22 @@ export default function Layout() {
             padding: '24px 20px 20px',
           }}
         >
-          <div
+          <video
+            src={robotAvatar}
+            autoPlay
+            loop
+            muted
+            playsInline
             style={{
               width: 34,
               height: 34,
               borderRadius: 10,
-              background: 'linear-gradient(90deg,#2697FF,#66B6FF)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#fff',
-              fontSize: 18,
+              objectFit: 'cover',
+              background: 'rgba(38,151,255,0.15)',
+              flexShrink: 0,
             }}
-          >
-            <DatabaseOutlined />
-          </div>
-          <span style={{ fontSize: 18, fontWeight: 600, color: '#fff' }}>C盘分析</span>
+          />
+          <span style={{ fontSize: 18, fontWeight: 600, color: '#fff' }}>Roberta</span>
         </div>
 
         <Menu

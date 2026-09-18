@@ -1,5 +1,5 @@
-﻿<#
-CDriveCleaner WDAC helper - deploy a supplemental CI policy that whitelists
+<#
+Roberta WDAC helper - deploy a supplemental CI policy that whitelists
 the unsigned Electron build so NSIS packaging / app launch is not blocked.
 
 Run as Administrator.
@@ -135,4 +135,4 @@ Write-Host "     Whitelist:   $TargetDir"
 Write-Host "     Backup meta: $metaFile"
 Write-Host "     Restore:     powershell -ExecutionPolicy Bypass -File `"$PSScriptRoot\wdac-restore.ps1`" -BackupDir `"$stampRoot`""
 Write-Host ""
-Write-Host "Test: try launching dist_electron\win-unpacked\CDriveCleaner.exe"
+Write-Host "Test: try launching dist_electron\win-unpacked\Roberta.exe"

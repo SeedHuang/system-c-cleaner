@@ -1,4 +1,4 @@
-﻿# CDriveCleaner WDAC helper - one-click restore of CI policies
+# Roberta WDAC helper - one-click restore of CI policies
 # Run as Administrator. Use -BackupDir to pick a specific backup, otherwise the latest is used.
 param([string]$BackupDir = '')
 
@@ -20,7 +20,7 @@ if (-not (Test-Path $BackupDir)) {
     exit 1
 }
 
-# --- 1) remove the CDriveCleaner supplemental policy if it was deployed ---
+# --- 1) remove the Roberta supplemental policy if it was deployed ---
 # GUID is recorded in the deployment meta. Fallback: scan all backup dirs for
 # any supplemental GUIDs recorded by wdac-deploy-supplement.ps1.
 $suppGuid = (Get-Content (Join-Path $BackupDir 'meta.txt') -ErrorAction SilentlyContinue |

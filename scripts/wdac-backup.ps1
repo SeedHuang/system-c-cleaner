@@ -1,4 +1,4 @@
-﻿# CDriveCleaner WDAC helper - backup active CI policies before any change
+# Roberta WDAC helper - backup active CI policies before any change
 # Run as Administrator. Restores via wdac-restore.ps1.
 $ErrorActionPreference = 'Stop'
 

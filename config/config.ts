@@ -8,6 +8,8 @@ export default defineConfig({
   // 显式启用 model 插件（enableBy: config），useModel 才可用
   model: {},
   npmClient: 'npm',
+  // 应用显示名：浏览器标签 / Electron 窗口标题
+  title: 'Roberta',
   // 开发模式：/api 请求转发到本地 Node 服务
   proxy: {
     '/api': {
