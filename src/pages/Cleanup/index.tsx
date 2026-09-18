@@ -1,14 +1,27 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useModel } from '@umijs/max';
-import { Button, Card, Empty, Spin, Tag } from 'antd';
+import { Button, Card, Empty, message, Spin, Tag } from 'antd';
+import { FolderOpenOutlined } from '@ant-design/icons';
 import type { ScanItem } from '@/services/scan';
 import { cleanupLevels } from '@/setup/theme';
 import { formatGB } from '@/utils/format';
+import { openInExplorer } from '@/utils/shell';
 
 const order: (keyof typeof cleanupLevels)[] = ['safe', 'caution', 'keep', 'never'];
 
+/** 仅 safe/caution 且有路径的项显示「打开所在文件夹」；keep/never/unscanned 不显示 */
+function shouldShowOpenButton(it: ScanItem): boolean {
+  return (
+    (it.level === 'safe' || it.level === 'caution') &&
+    typeof it.path === 'string' &&
+    it.path.trim().length > 0
+  );
+}
+
 export default function CleanupPage() {
   const { data, loading, scanning, startScan } = useModel('scan');
+  // 按钮级 loading：同一时刻只允许一个按钮在请求中，防止连点
+  const [busyId, setBusyId] = useState<string | null>(null);
   // 从概览下钻进来时，滚动到对应分类分组（用原生 URL，不依赖路由 hook）
   const levelFromQuery =
     typeof window !== 'undefined'
@@ -112,6 +125,26 @@ export default function CleanupPage() {
                     <div style={{ marginTop: 10, fontSize: 13, color: '#B5C9DB', lineHeight: 1.6 }}>
                       {it.reason}
                     </div>
+                    {shouldShowOpenButton(it) && (
+                      <div style={{ marginTop: 10 }}>
+                        <Button
+                          size="small"
+                          icon={<FolderOpenOutlined />}
+                          loading={busyId === it.id}
+                          onClick={async () => {
+                            setBusyId(it.id);
+                            try {
+                              const r = await openInExplorer(it.path);
+                              if (!r.ok) message.error(r.error || '打开失败');
+                            } finally {
+                              setBusyId(null);
+                            }
+                          }}
+                        >
+                          打开所在文件夹
+                        </Button>
+                      </div>
+                    )}
                     {it.action && (
                       <div style={{ marginTop: 10 }}>
                         <div

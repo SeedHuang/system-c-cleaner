@@ -1,6 +1,9 @@
 /**
  * C 盘分析 - 路径与配置解析（单一来源，server 与 electron 主进程共用）
- * 开发/独立运行默认写项目根；打包后由 electron/main.js 注入 CLEANER_* 环境变量。
+ * 开发/独立运行默认写项目根；打包后由 electron/main.js 注入 CLEANER_* 环境变量：
+ *   - CLEANER_DATA_DIR  默认为 %USERPROFILE%\.system-c-cleaner（用户主目录下的隐藏文件夹）
+ *   - 用户仍可显式覆盖（开发模式 / 多实例 / 自定义安装位置）
+ *   - 旧位置 %APPDATA%\c-drive-cleaner 的数据由 electron/migrate-data.js 一次性迁移过来
  */
 const path = require('path');
 

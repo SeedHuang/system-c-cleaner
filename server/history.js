@@ -16,6 +16,7 @@ const ROOT = paths.root;
 const HISTORY_DIR = paths.historyDir;
 
 const GB = 1024 ** 3;
+const DAY_MS = 24 * 3600 * 1000;
 
 /** '2026-09-16 11:44:40' → 快照文件名 ID（Windows 文件名不能含冒号） */
 function idFromDate(d) {
@@ -47,7 +48,7 @@ function listSnapshots(historyDir = HISTORY_DIR) {
   });
   if (snapshots.length !== index.snapshots.length) writeIndex({ snapshots }, historyDir);
   const totalSizeMB = +snapshots.reduce((sum, s) => sum + (s.fileSizeMB || 0), 0).toFixed(1);
-  return { snapshots, totalSizeMB };
+  return { historyDir, snapshots, totalSizeMB };
 }
 
 function serializeDirMap(dirMap) {
@@ -201,22 +202,91 @@ function parseWindowLabel(label) {
   return { ms: Number(m[1]) * unitMs[m[2]], label: `${Number(m[1])}${m[2]}` };
 }
 
-/** 找距离 now-windowMs 最近但不晚于它的快照；数据不足回退最早；仅 1 条返回 id=null */
-function pickCompareId(index, nowMs, windowMs) {
-  const sorted = [...index.snapshots].sort((a, b) => new Date(a.scannedAt.replace(' ', 'T')) - new Date(b.scannedAt.replace(' ', 'T')));
-  if (sorted.length < 2) return { id: null, actualWindowDays: null };
-  const latest = sorted[sorted.length - 1];
-  const target = nowMs - windowMs;
+/** 快照时间字符串 → ms */
+function snapTime(s) {
+  return new Date(String(s.scannedAt).replace(' ', 'T')).getTime();
+}
+
+/** 快照按时间升序排列（返回新数组，不改原索引） */
+function sortSnapshotsAsc(snapshots) {
+  return [...snapshots].sort((a, b) => snapTime(a) - snapTime(b));
+}
+
+/** 升序数组里「时间 ≤ ms」的最后一条；无 → null */
+function pickAtOrBefore(sortedAsc, ms) {
   let chosen = null;
-  for (const s of sorted) {
-    const t = new Date(s.scannedAt.replace(' ', 'T')).getTime();
-    if (t > target) break;
+  for (const s of sortedAsc) {
+    if (snapTime(s) > ms) break;
     chosen = s;
   }
-  if (!chosen) chosen = sorted[0];
+  return chosen;
+}
+
+/** 找距离 now-windowMs 最近但不晚于它的快照；数据不足回退最早；仅 1 条返回 id=null */
+function pickCompareId(index, nowMs, windowMs) {
+  const sorted = sortSnapshotsAsc(index.snapshots);
+  if (sorted.length < 2) return { id: null, actualWindowDays: null };
+  const latest = sorted[sorted.length - 1];
+  const chosen = pickAtOrBefore(sorted, nowMs - windowMs) || sorted[0];
   if (chosen.id === latest.id) return { id: null, actualWindowDays: null };
-  const actualDays = (nowMs - new Date(chosen.scannedAt.replace(' ', 'T')).getTime()) / (24 * 3600 * 1000);
+  const actualDays = (nowMs - snapTime(chosen)) / DAY_MS;
   return { id: chosen.id, actualWindowDays: Math.round(actualDays * 10) / 10 };
+}
+
+/**
+ * 时间串 → 该粒度的起点/终点 ms；格式/日期/时间非法 → null
+ * 支持三种粒度：'YYYY-MM-DD' / 'YYYY-MM-DD HH:mm' / 'YYYY-MM-DD HH:mm:ss'
+ * 起点：日期 → 00:00:00.000、分钟 → :00.000、秒 → :000
+ * 终点：日期 → 23:59:59.999、分钟 → :59.999、秒 → :999（即「该粒度的最后一刻」）
+ */
+function parseRangeDate(s, edge = 'start') {
+  const m = /^(\d{4})-(\d{2})-(\d{2})(?: (\d{2}):(\d{2})(?::(\d{2}))?)?$/.exec(String(s == null ? '' : s));
+  if (!m) return null;
+  const y = Number(m[1]);
+  const mo = Number(m[2]);
+  const d = Number(m[3]);
+  const hasTime = m[4] != null;
+  const hasSec = m[6] != null;
+  const hh = hasTime ? Number(m[4]) : 0;
+  const mm = hasTime ? Number(m[5]) : 0;
+  const ss = hasSec ? Number(m[6]) : 0;
+  if (hh > 23 || mm > 59 || ss > 59) return null;
+  const end = edge === 'end';
+  const dt = new Date(
+    y,
+    mo - 1,
+    d,
+    end && !hasTime ? 23 : hh,
+    end && !hasTime ? 59 : mm,
+    end ? (hasSec ? ss : 59) : ss,
+    end ? 999 : 0,
+  );
+  // Date 会把 2026-02-30 这类日期归一化到 3 月，需回查确认
+  if (dt.getFullYear() !== y || dt.getMonth() !== mo - 1 || dt.getDate() !== d) return null;
+  return dt.getTime();
+}
+
+/** from/to 均为合法时间串且 from ≤ to → { fromMs, toMs }；否则 null（调用方回退窗口模式） */
+function parseRange({ from, to } = {}) {
+  const fromMs = parseRangeDate(from, 'start');
+  const toMs = parseRangeDate(to, 'end');
+  if (fromMs == null || toMs == null || fromMs > toMs) return null;
+  return { fromMs, toMs };
+}
+
+/**
+ * 区间模式选对比的两条快照：端点 = ≤toMs 的最后一条；基准 = ≤fromMs 的最后一条（无则回退最早一条，故
+ * 「区间开始前那一帧」即基准）。端点与基准为同一条（区间内没有新快照）→ 端点仍返回、基准为 null，表示不可比。
+ * @returns { latestId, compareId, actualDays }，端点不存在时 latestId 为 null
+ */
+function pickRangePair(index, fromMs, toMs) {
+  const sorted = sortSnapshotsAsc(index.snapshots);
+  const latest = pickAtOrBefore(sorted, toMs);
+  if (!latest) return { latestId: null, compareId: null, actualDays: null };
+  const compare = pickAtOrBefore(sorted, fromMs) || sorted[0];
+  if (compare.id === latest.id) return { latestId: latest.id, compareId: null, actualDays: null };
+  const actualDays = (snapTime(latest) - snapTime(compare)) / DAY_MS;
+  return { latestId: latest.id, compareId: compare.id, actualDays: Math.round(actualDays * 10) / 10 };
 }
 
 function diffMaps(latest, compare) {
@@ -274,31 +344,67 @@ async function loadAnchorGrowth(index, latestId, paths, historyDir, nowMs) {
   return flags;
 }
 
-async function computeGrowthTop({ window = '1m', top = 20 } = {}, historyDir = HISTORY_DIR, nowMs = Date.now()) {
+/**
+ * 解析「端点 / 基准」两条快照（窗口模式与区间模式统一入口）
+ * - 区间模式（from/to 均为合法 'YYYY-MM-DD'）：端点 = ≤to 的最后一条；基准 = ≤from 的最后一条
+ * - 窗口模式（回退）：端点 = 最新快照；基准 = now-window 之前最近的一条
+ * @returns { pair, latestMeta, window, rangeFrom, rangeTo } | null（null = 窗口非法或无快照）
+ */
+function resolveGrowthPair({ window, from, to }, index, nowMs) {
+  const range = parseRange({ from, to });
+  if (range) {
+    const pair = pickRangePair(index, range.fromMs, range.toMs);
+    return {
+      pair,
+      latestMeta: index.snapshots.find((s) => s.id === pair.latestId) || null,
+      window: null,
+      rangeFrom: from,
+      rangeTo: to,
+    };
+  }
   const w = parseWindowLabel(window);
+  const sorted = sortSnapshotsAsc(index.snapshots);
+  const latestMeta = sorted[sorted.length - 1] || null;
+  if (!w || !latestMeta) return null;
+  const c = pickCompareId(index, nowMs, w.ms);
+  return {
+    pair: { latestId: latestMeta.id, compareId: c.id, actualDays: c.actualWindowDays },
+    latestMeta,
+    window,
+    rangeFrom: null,
+    rangeTo: null,
+  };
+}
+
+async function computeGrowthTop({ window = '1m', top = 20, from = null, to = null } = {}, historyDir = HISTORY_DIR, nowMs = Date.now()) {
   const index = readIndex(historyDir);
-  const sorted = [...index.snapshots].sort((a, b) => new Date(b.scannedAt.replace(' ', 'T')) - new Date(a.scannedAt.replace(' ', 'T')));
-  const latest = sorted[0];
-  if (!w || !latest) return { window, insufficient: true, entries: [] };
-  const compare = pickCompareId(index, nowMs, w.ms);
-  if (!compare.id) {
-    return { window, scannedAt: latest.scannedAt, compareAt: null, actualWindowDays: null, insufficient: true, unscannedDirs: latest.unscannedDirs || 0, entries: [] };
+  const ctx = resolveGrowthPair({ window, from, to }, index, nowMs);
+  const head = ctx
+    ? { window: ctx.window, rangeFrom: ctx.rangeFrom, rangeTo: ctx.rangeTo }
+    : { window, rangeFrom: null, rangeTo: null };
+  if (!ctx) return { ...head, insufficient: true, entries: [] };
+  const { pair, latestMeta } = ctx;
+  if (!pair.latestId || !pair.compareId) {
+    return {
+      ...head, scannedAt: latestMeta ? latestMeta.scannedAt : null, compareAt: null, actualWindowDays: null,
+      insufficient: true, unscannedDirs: (latestMeta && latestMeta.unscannedDirs) || 0, entries: [],
+    };
   }
   const [latestMap, compareMap] = await Promise.all([
-    loadSnapshotMap(latest.id, historyDir),
-    loadSnapshotMap(compare.id, historyDir),
+    loadSnapshotMap(pair.latestId, historyDir),
+    loadSnapshotMap(pair.compareId, historyDir),
   ]);
   const entries = [...diffMaps(latestMap, compareMap).entries()]
     .map(([path, v]) => ({ path, ...v, tier: tierOf(v.growth), sustained: false }))
     .sort((a, b) => b.growth - a.growth)
     .slice(0, top);
-  const flags = await loadAnchorGrowth(index, latest.id, entries.map((e) => e.path), historyDir, nowMs);
+  const flags = await loadAnchorGrowth(index, pair.latestId, entries.map((e) => e.path), historyDir, nowMs);
   for (const e of entries) e.sustained = flags.get(e.path) || false;
-  const compareMeta = index.snapshots.find((s) => s.id === compare.id);
+  const compareMeta = index.snapshots.find((s) => s.id === pair.compareId);
   return {
-    window, scannedAt: latest.scannedAt, compareAt: compareMeta ? compareMeta.scannedAt : null,
-    actualWindowDays: compare.actualWindowDays, insufficient: false,
-    unscannedDirs: latest.unscannedDirs || 0, entries,
+    ...head, scannedAt: latestMeta.scannedAt, compareAt: compareMeta ? compareMeta.scannedAt : null,
+    actualWindowDays: pair.actualDays, insufficient: false,
+    unscannedDirs: latestMeta.unscannedDirs || 0, entries,
   };
 }
 
@@ -308,19 +414,20 @@ function normalizeKey(p) {
   return raw === 'c:' ? 'c:\\' : raw;
 }
 
-async function computeGrowthDir({ path: p = 'c:\\', window = '1m' } = {}, historyDir = HISTORY_DIR, nowMs = Date.now()) {
-  const w = parseWindowLabel(window);
+async function computeGrowthDir({ path: p = 'c:\\', window = '1m', from = null, to = null } = {}, historyDir = HISTORY_DIR, nowMs = Date.now()) {
   const index = readIndex(historyDir);
-  const sorted = [...index.snapshots].sort((a, b) => new Date(b.scannedAt.replace(' ', 'T')) - new Date(a.scannedAt.replace(' ', 'T')));
-  const latest = sorted[0];
-  if (!w || !latest) return { path: p, window, insufficient: true, entries: [] };
-  const compare = pickCompareId(index, nowMs, w.ms);
-  if (!compare.id) return { path: p, window, insufficient: true, entries: [] };
+  const ctx = resolveGrowthPair({ window, from, to }, index, nowMs);
+  const head = ctx
+    ? { window: ctx.window, rangeFrom: ctx.rangeFrom, rangeTo: ctx.rangeTo }
+    : { window, rangeFrom: null, rangeTo: null };
+  if (!ctx) return { path: p, ...head, insufficient: true, entries: [] };
+  const { pair } = ctx;
+  if (!pair.latestId || !pair.compareId) return { path: p, ...head, insufficient: true, entries: [] };
   const key = normalizeKey(p);
   const prefix = key === 'c:\\' ? 'c:\\' : key + '\\';
   const [latestMap, compareMap] = await Promise.all([
-    loadSnapshotMap(latest.id, historyDir),
-    loadSnapshotMap(compare.id, historyDir),
+    loadSnapshotMap(pair.latestId, historyDir),
+    loadSnapshotMap(pair.compareId, historyDir),
   ]);
   const diff = diffMaps(latestMap, compareMap);
   // parentSet：所有「作为某目录祖先」的路径 → 判断 hasChildren
@@ -340,9 +447,9 @@ async function computeGrowthDir({ path: p = 'c:\\', window = '1m' } = {}, histor
     children.push({ path: pathKey, name: rest, size: v.size, growth: v.growth, tier: tierOf(v.growth), hasChildren: parentSet.has(pathKey), sustained: false });
   }
   children.sort((a, b) => b.growth - a.growth);
-  const flags = await loadAnchorGrowth(index, latest.id, children.map((c) => c.path), historyDir, nowMs);
+  const flags = await loadAnchorGrowth(index, pair.latestId, children.map((c) => c.path), historyDir, nowMs);
   for (const c of children) c.sustained = flags.get(c.path) || false;
-  return { path: key, window, actualWindowDays: compare.actualWindowDays, insufficient: false, entries: children };
+  return { path: key, ...head, actualWindowDays: pair.actualDays, insufficient: false, entries: children };
 }
 
 async function computeGrowthTrend({ path: p = 'c:\\', points = 60 } = {}, historyDir = HISTORY_DIR) {
@@ -373,6 +480,9 @@ module.exports = {
   buildSnapshot,
   parseWindowLabel,
   pickCompareId,
+  parseRangeDate,
+  parseRange,
+  pickRangePair,
   diffMaps,
   tierOf,
   isSustained,

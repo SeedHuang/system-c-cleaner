@@ -2,7 +2,7 @@ const { test } = require('node:test');
 const assert = require('node:assert');
 const { createTray } = require('./tray');
 
-function makeHarness({ autostart = false, widgetVisible = true, trayThrows = false } = {}) {
+function makeHarness({ autostart = false, widgetVisible = true, autoScan = true, trayThrows = false } = {}) {
   let lastMenuTemplate = null;
   let lastTray = null;
   class FakeTray {
@@ -18,7 +18,7 @@ function makeHarness({ autostart = false, widgetVisible = true, trayThrows = fal
     setContextMenu(m) { this.menu = m; }
     on(evt, fn) { this.handlers[evt] = fn; }
   }
-  const calls = { onShow: 0, onScan: 0, onToggle: 0, onToggleWidget: 0, onQuit: 0 };
+  const calls = { onShow: 0, onScan: 0, onToggle: 0, onToggleWidget: 0, onToggleAutoScan: 0, onQuit: 0 };
   const log = { info: () => {}, warn: () => {}, error: () => {}, __error: [] };
   log.error = (...a) => log.__error.push(a);
 
@@ -26,11 +26,12 @@ function makeHarness({ autostart = false, widgetVisible = true, trayThrows = fal
     Tray: FakeTray,
     Menu: { buildFromTemplate: (tpl) => { lastMenuTemplate = tpl; return { __tpl: tpl }; } },
     icon: 'tray.png',
-    getMenuState: () => ({ autostart, widgetVisible }),
+    getMenuState: () => ({ autostart, widgetVisible, autoScan }),
     onShow: () => { calls.onShow++; },
     onScan: () => { calls.onScan++; },
     onToggleAutostart: () => { calls.onToggle++; },
     onToggleWidget: () => { calls.onToggleWidget++; },
+    onToggleAutoScan: () => { calls.onToggleAutoScan++; },
     onQuit: () => { calls.onQuit++; },
     log,
   });
@@ -50,13 +51,13 @@ test('单击托盘触发 onShow', () => {
   assert.strictEqual(h.calls.onShow, 1);
 });
 
-test('菜单含 5 个功能项（排除分隔线）', () => {
+test('菜单含 6 个功能项（排除分隔线）', () => {
   const h = makeHarness();
   const tpl = h.getTemplate();
   const items = tpl.filter((it) => it.type !== 'separator');
-  assert.strictEqual(items.length, 5);
+  assert.strictEqual(items.length, 6);
   assert.deepStrictEqual(items.map((i) => i.label), [
-    '打开主界面', '立即扫描', '开机自启', '显示/隐藏桌面小组件', '退出',
+    '打开主界面', '立即扫描', '开机自启', '显示/隐藏桌面小组件', '后台自动扫描', '退出',
   ]);
 });
 
@@ -74,6 +75,16 @@ test('widget checkbox 状态与 getMenuState 一致', () => {
   assert.strictEqual(item.checked, false);
 });
 
+test('后台自动扫描 checkbox 状态与 getMenuState 一致', () => {
+  const on = makeHarness({ autoScan: true });
+  const onItem = on.getTemplate().find((i) => i.label === '后台自动扫描');
+  assert.strictEqual(onItem.type, 'checkbox');
+  assert.strictEqual(onItem.checked, true);
+
+  const off = makeHarness({ autoScan: false });
+  assert.strictEqual(off.getTemplate().find((i) => i.label === '后台自动扫描').checked, false);
+});
+
 test('菜单点击回调正确绑定', () => {
   const h = makeHarness();
   const tpl = h.getTemplate();
@@ -81,11 +92,13 @@ test('菜单点击回调正确绑定', () => {
   tpl.find((i) => i.label === '立即扫描').click();
   tpl.find((i) => i.label === '开机自启').click();
   tpl.find((i) => i.label === '显示/隐藏桌面小组件').click();
+  tpl.find((i) => i.label === '后台自动扫描').click();
   tpl.find((i) => i.label === '退出').click();
   assert.strictEqual(h.calls.onShow, 1);
   assert.strictEqual(h.calls.onScan, 1);
   assert.strictEqual(h.calls.onToggle, 1);
   assert.strictEqual(h.calls.onToggleWidget, 1);
+  assert.strictEqual(h.calls.onToggleAutoScan, 1);
   assert.strictEqual(h.calls.onQuit, 1);
 });
 

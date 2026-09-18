@@ -9,7 +9,9 @@ export interface GrowthEntry {
 }
 
 export interface GrowthTopResult {
-  window: string;
+  window: string | null;
+  rangeFrom: string | null;
+  rangeTo: string | null;
   scannedAt: string;
   compareAt: string | null;
   actualWindowDays: number | null;
@@ -25,10 +27,26 @@ export interface GrowthDirEntry extends GrowthEntry {
 
 export interface GrowthDirResult {
   path: string;
-  window: string;
+  window: string | null;
+  rangeFrom: string | null;
+  rangeTo: string | null;
   actualWindowDays: number | null;
   insufficient: boolean;
   entries: GrowthDirEntry[];
+}
+
+/** 时间范围参数：from+to 为绝对区间（优先），否则用预设 window */
+export interface GrowthRangeParams {
+  window?: string;
+  from?: string;
+  to?: string;
+}
+
+/** 区间优先，缺一个就回落预设窗口 */
+function rangeQuery(params: GrowthRangeParams): Record<string, string> {
+  return params.from && params.to
+    ? { from: params.from, to: params.to }
+    : { window: params.window || '1m' };
 }
 
 export interface GrowthTrendPoint {
@@ -50,13 +68,13 @@ async function request<T>(url: string): Promise<T> {
   return res.json();
 }
 
-export function getGrowth(params: { window: string; top?: number }): Promise<GrowthTopResult> {
-  const q = new URLSearchParams({ window: params.window, top: String(params.top ?? 20) });
+export function getGrowth(params: GrowthRangeParams & { top?: number }): Promise<GrowthTopResult> {
+  const q = new URLSearchParams({ ...rangeQuery(params), top: String(params.top ?? 20) });
   return request<GrowthTopResult>(`/api/growth?${q}`);
 }
 
-export function getGrowthDir(params: { path: string; window: string }): Promise<GrowthDirResult> {
-  const q = new URLSearchParams({ path: params.path, window: params.window });
+export function getGrowthDir(params: GrowthRangeParams & { path: string }): Promise<GrowthDirResult> {
+  const q = new URLSearchParams({ path: params.path, ...rangeQuery(params) });
   return request<GrowthDirResult>(`/api/growth/dir?${q}`);
 }
 

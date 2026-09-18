@@ -10,6 +10,8 @@ export interface HistorySnapshot {
 }
 
 export interface HistoryList {
+  /** 快照文件所在的本地目录（用于「打开历史快照目录」按钮）；null 表示尚未定位 */
+  historyDir: string | null;
   snapshots: HistorySnapshot[];
   totalSizeMB: number;
 }

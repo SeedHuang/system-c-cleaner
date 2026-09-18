@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Breadcrumb, Button, Card, Col, Empty, InputNumber, Row, Segmented, Spin, Table, Tag } from 'antd';
+import { Alert, Breadcrumb, Button, Card, Col, DatePicker, Empty, InputNumber, Row, Segmented, Spin, Table, Tag } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
+import dayjs from 'dayjs';
+import type { Dayjs } from 'dayjs';
 import { FolderOutlined } from '@ant-design/icons';
 import PathLink from '@/components/PathLink';
 import TrendChart from '@/components/TrendChart';
@@ -36,6 +38,7 @@ const tierLabel: Record<GrowthTier, string> = {
 
 export default function TrendsPage() {
   const [windowLabel, setWindowLabel] = useState('1m');
+  const [range, setRange] = useState<[Dayjs, Dayjs] | null>(null);
   const [customHours, setCustomHours] = useState<number | null>(24);
   const [topData, setTopData] = useState<GrowthTopResult | null>(null);
   const [loadingTop, setLoadingTop] = useState(false);
@@ -44,41 +47,63 @@ export default function TrendsPage() {
   const [loadingDir, setLoadingDir] = useState(false);
   const [trend, setTrend] = useState<{ t: string; size: number | null }[]>([]);
 
-  const loadTop = useCallback(async (window: string) => {
+  // 区间优先：选了起止时刻就用区间，否则用预设窗口（二选一）
+  const from = range ? range[0].format('YYYY-MM-DD HH:mm') : undefined;
+  const to = range ? range[1].format('YYYY-MM-DD HH:mm') : undefined;
+  const rangeParams = useMemo(() => ({ window: windowLabel, from, to }), [windowLabel, from, to]);
+  // 区间模式的展示文案（null = 未选区间，用预设窗口）
+  const rangeText = from && to ? `${from} ~ ${to}` : null;
+  // 「今天」快捷方式：开始 00:00:00.000、结束 23:59:59.999（endOf('day') 即当天最后一刻）
+  const todayPresets = useMemo(
+    () => [{ label: '今天', value: [dayjs().startOf('day'), dayjs().endOf('day')] as [Dayjs, Dayjs] }],
+    [],
+  );
+
+  const loadTop = useCallback(async () => {
     setLoadingTop(true);
     try {
-      setTopData(await getGrowth({ window, top: 20 }));
+      setTopData(await getGrowth({ ...rangeParams, top: 20 }));
     } catch {
       setTopData(null);
     } finally {
       setLoadingTop(false);
     }
-  }, []);
+  }, [rangeParams]);
 
   useEffect(() => {
-    loadTop(windowLabel);
-  }, [windowLabel, loadTop]);
+    loadTop();
+  }, [loadTop]);
 
-  const openDir = useCallback(
-    async (path: string) => {
-      setDrillPath(path);
+  /** 下钻：只切换目录 + 拉该目录历史趋势；子目录增长由下方 effect 按当前时间范围拉取 */
+  const openDir = useCallback(async (path: string) => {
+    setDrillPath(path);
+    try {
+      const t = await getGrowthTrend({ path, points: 60 });
+      setTrend(t.points);
+    } catch {
+      setTrend([]);
+    }
+  }, []);
+
+  // 下钻目录或时间范围变化时重新拉取子目录增长（否则会一直显示旧范围的数据）
+  useEffect(() => {
+    if (!drillPath) return;
+    let alive = true;
+    (async () => {
       setLoadingDir(true);
       try {
-        setDirData(await getGrowthDir({ path, window: windowLabel }));
+        const d = await getGrowthDir({ path: drillPath, ...rangeParams });
+        if (alive) setDirData(d);
       } catch {
-        setDirData(null);
+        if (alive) setDirData(null);
       } finally {
-        setLoadingDir(false);
+        if (alive) setLoadingDir(false);
       }
-      try {
-        const t = await getGrowthTrend({ path, points: 60 });
-        setTrend(t.points);
-      } catch {
-        setTrend([]);
-      }
-    },
-    [windowLabel],
-  );
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [drillPath, rangeParams]);
 
   const crumbs = useMemo(() => (drillPath ? drillPath.split('\\').filter(Boolean) : []), [drillPath]);
 
@@ -147,19 +172,41 @@ export default function TrendsPage() {
   return (
     <div>
       <Card title="增长趋势" bordered={false} style={{ marginBottom: 20 }}>
-        <Segmented options={WINDOW_OPTIONS} value={windowLabel} onChange={(v) => setWindowLabel(String(v))} />
-        <div style={{ display: 'inline-flex', gap: 8, marginLeft: 16, alignItems: 'center' }}>
-          <InputNumber
-            min={1}
-            max={24 * 365}
-            value={customHours}
-            onChange={(v) => setCustomHours(v)}
-            placeholder="小时"
-            style={{ width: 90 }}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center' }}>
+          <Segmented
+            options={WINDOW_OPTIONS}
+            value={range ? undefined : windowLabel}
+            onChange={(v) => setWindowLabel(String(v))}
           />
-          <Button size="small" onClick={() => customHours && setWindowLabel(`${customHours}h`)}>
-            自定义
-          </Button>
+          <div style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}>
+            <InputNumber
+              min={1}
+              max={24 * 365}
+              value={customHours}
+              onChange={(v) => setCustomHours(v)}
+              placeholder="小时"
+              style={{ width: 90 }}
+            />
+            <Button size="small" onClick={() => customHours && setWindowLabel(`${customHours}h`)}>
+              自定义
+            </Button>
+          </div>
+          <DatePicker.RangePicker
+            value={range}
+            onChange={(v) => {
+              const [s, e] = v ?? [];
+              setRange(s && e ? [s, e] : null);
+            }}
+            showTime={{ format: 'HH:mm' }}
+            format="YYYY-MM-DD HH:mm"
+            presets={todayPresets}
+            allowClear
+            placeholder={['开始时间', '结束时间']}
+            style={{ width: 330 }}
+          />
+          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)' }}>
+            {range ? '按所选时间区间查看' : '按预设窗口查看'}
+          </span>
         </div>
       </Card>
 
@@ -180,7 +227,9 @@ export default function TrendsPage() {
 
       {!drillPath ? (
         <Card
-          title={`增长排行 Top 20${topData?.compareAt ? `（对比 ${topData.compareAt}）` : ''}`}
+          title={`增长排行 Top 20${
+            rangeText ? `（区间 ${rangeText}）` : topData?.compareAt ? `（对比 ${topData.compareAt}）` : ''
+          }`}
           bordered={false}
         >
           {loadingTop ? (
@@ -267,7 +316,20 @@ export default function TrendsPage() {
           </Card>
           <Row gutter={20}>
             <Col span={16}>
-              <Card title={`${drillPath} 子目录增长（${windowLabel}）`} bordered={false}>
+              <Card
+                bordered={false}
+                title={
+                  // 整段「图标 + 标题文字」都触发打开当前目录（hover 时整段变蓝色下划线）
+                  <PathLink
+                    path={drillPath}
+                    leadingIcon
+                    title={`打开当前目录：${drillPath}`}
+                    style={{ fontSize: 16, fontWeight: 600 }}
+                  >
+                    {`${drillPath} 子目录增长（${rangeText ?? windowLabel}）`}
+                  </PathLink>
+                }
+              >
                 {loadingDir ? (
                   <div style={{ textAlign: 'center', padding: 40 }}>
                     <Spin />
@@ -292,7 +354,19 @@ export default function TrendsPage() {
               </Card>
             </Col>
             <Col span={8}>
-              <Card title={`${drillPath} 历史大小趋势`} bordered={false}>
+              <Card
+                bordered={false}
+                title={
+                  <PathLink
+                    path={drillPath}
+                    leadingIcon
+                    title={`打开当前目录：${drillPath}`}
+                    style={{ fontSize: 16, fontWeight: 600 }}
+                  >
+                    {`${drillPath} 历史大小趋势`}
+                  </PathLink>
+                }
+              >
                 {trend.length >= 2 ? (
                   <TrendChart points={trend} />
                 ) : (

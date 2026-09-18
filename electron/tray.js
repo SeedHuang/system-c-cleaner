@@ -1,8 +1,8 @@
 /**
- * 系统托盘：图标 + 右键菜单（打开主界面 / 立即扫描 / 开机自启 / 退出）。
+ * 系统托盘：图标 + 右键菜单（打开主界面 / 立即扫描 / 开机自启 / 桌面小组件 / 后台自动扫描 / 退出）。
  * electron 依赖通过参数注入（Tray / Menu），便于 node:test 无 electron 环境测试。
  */
-function createTray({ Tray, Menu, icon, getMenuState, onShow, onScan, onToggleAutostart, onToggleWidget, onQuit, log }) {
+function createTray({ Tray, Menu, icon, getMenuState, onShow, onScan, onToggleAutostart, onToggleWidget, onToggleAutoScan, onQuit, log }) {
   let tray;
   try {
     tray = new Tray(icon);
@@ -15,6 +15,7 @@ function createTray({ Tray, Menu, icon, getMenuState, onShow, onScan, onToggleAu
         { label: '立即扫描', click: onScan },
         { label: '开机自启', type: 'checkbox', checked: state.autostart, click: onToggleAutostart },
         { label: '显示/隐藏桌面小组件', type: 'checkbox', checked: state.widgetVisible, click: onToggleWidget },
+        { label: '后台自动扫描', type: 'checkbox', checked: state.autoScan, click: onToggleAutoScan },
         { type: 'separator' },
         { label: '退出', click: onQuit },
       ]);

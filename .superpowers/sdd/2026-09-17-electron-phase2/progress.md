@@ -30,5 +30,5 @@ Plan：`docs/superpowers/plans/2026-09-17-electron-phase2.md`
 
 ## 待办
 
-- [ ] 提交并推送 Phase 2 代码（git 写操作需用户终端执行）
-- [ ] 进入 Phase 3（桌面悬浮小部件）
+- [x] 提交并推送 Phase 2 代码（commit `577d533` + 账本 `6a73613`）
+- [x] 进入 Phase 3（桌面悬浮小部件）→ 见 `.superpowers/sdd/2026-09-17-electron-phase3/progress.md`

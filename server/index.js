@@ -5,7 +5,7 @@
  *  - GET  /api/scan  返回缓存结果
  *  - GET  /api/status 是否已有结果
  *  - GET  /api/history / DELETE /api/history  历史快照列表与删除
- *  - GET  /api/growth[/dir|/trend]  增长分析
+ *  - GET  /api/growth[/dir|/trend]  增长分析（window=1m 或 from=YYYY-MM-DD&to=YYYY-MM-DD 区间）
  *  - POST /api/elevate-restart  一键以管理员身份重启（UAC）并自动重扫
  *  - 生产模式托管 dist/ 静态资源（SPA fallback）
  */
@@ -232,15 +232,19 @@ async function handle(req, res) {
 
     if (req.method === 'GET' && p === '/api/growth') {
       const window = url.searchParams.get('window') || '1m';
+      const from = url.searchParams.get('from');
+      const to = url.searchParams.get('to');
       const top = Math.min(Math.max(Number(url.searchParams.get('top')) || 20, 1), 100);
-      sendJson(res, 200, await history.computeGrowthTop({ window, top }));
+      sendJson(res, 200, await history.computeGrowthTop({ window, top, from, to }));
       return;
     }
 
     if (req.method === 'GET' && p === '/api/growth/dir') {
       const path_ = url.searchParams.get('path') || 'c:\\';
       const window = url.searchParams.get('window') || '1m';
-      sendJson(res, 200, await history.computeGrowthDir({ path: path_, window }));
+      const from = url.searchParams.get('from');
+      const to = url.searchParams.get('to');
+      sendJson(res, 200, await history.computeGrowthDir({ path: path_, window, from, to }));
       return;
     }
 

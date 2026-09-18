@@ -38,12 +38,30 @@ test('GET /api/history 空历史返回空列表', async () => {
   const body = await res.json();
   assert.ok(Array.isArray(body.snapshots));
   assert.strictEqual(typeof body.totalSizeMB, 'number');
+  assert.strictEqual(typeof body.historyDir, 'string'); // 用于「打开历史快照目录」按钮
 });
 
 test('GET /api/growth 无历史时 insufficient=true', async () => {
   const res = await fetch(`${base}/api/growth?window=1m`);
   const body = await res.json();
   assert.strictEqual(body.insufficient, true);
+});
+
+test('GET /api/growth 区间参数透传并回显', async () => {
+  const res = await fetch(`${base}/api/growth?from=2026-09-01&to=2026-09-15`);
+  const body = await res.json();
+  assert.strictEqual(body.insufficient, true);
+  assert.strictEqual(body.window, null);
+  assert.strictEqual(body.rangeFrom, '2026-09-01');
+  assert.strictEqual(body.rangeTo, '2026-09-15');
+});
+
+test('GET /api/growth/dir 区间参数透传并回显', async () => {
+  const res = await fetch(`${base}/api/growth/dir?path=c%3A%5C&from=2026-09-01&to=2026-09-15`);
+  const body = await res.json();
+  assert.strictEqual(body.insufficient, true);
+  assert.strictEqual(body.rangeFrom, '2026-09-01');
+  assert.strictEqual(body.rangeTo, '2026-09-15');
 });
 
 test('GET /api/status 包含 elevatedScan 字段', async () => {
