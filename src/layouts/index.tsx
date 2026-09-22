@@ -1,5 +1,5 @@
 import { Outlet, useLocation, useNavigate, useModel } from '@umijs/max';
-import { Button, Input, Menu, message } from 'antd';
+import { Input, Menu, message } from 'antd';
 import {
   DashboardOutlined,
   DatabaseOutlined,
@@ -11,7 +11,8 @@ import {
   SafetyCertificateOutlined,
   SearchOutlined,
 } from '@ant-design/icons';
-import { figmaColors } from '@/setup/theme';
+import { cyberColors } from '@/setup/theme';
+import { CyberButton, CyberCard, CyberDivider } from '@/components/cyber';
 import { formatGB } from '@/utils/format';
 import robotAvatar from '../../assets/robot.mp4';
 
@@ -44,13 +45,13 @@ export default function Layout() {
   const scannedAt = data?.scannedAt;
 
   return (
-    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
-      {/* 左侧导航（Figma 220px 深色侧边栏） */}
+    <div className="cyber-app" style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
+      {/* 左侧导航（CP2077 近黑侧边栏 + 红色分隔线） */}
       <aside
-        className="figma-sider"
+        className="cyber-sider"
         style={{
           width: 220,
-          background: figmaColors.bgContainer,
+          background: cyberColors.bgLayout,
           flexShrink: 0,
           display: 'flex',
           flexDirection: 'column',
@@ -73,13 +74,25 @@ export default function Layout() {
             style={{
               width: 34,
               height: 34,
-              borderRadius: 10,
+              borderRadius: 0,
               objectFit: 'cover',
-              background: 'rgba(38,151,255,0.15)',
+              background: 'rgba(247,80,73,0.15)',
+              border: `1px solid ${cyberColors.borderRed}`,
               flexShrink: 0,
             }}
           />
-          <span style={{ fontSize: 18, fontWeight: 600, color: '#fff' }}>Roberta</span>
+          <span
+            style={{
+              fontFamily: "'Rajdhani', sans-serif",
+              fontSize: 18,
+              fontWeight: 600,
+              textTransform: 'uppercase',
+              letterSpacing: '0.04em',
+              color: '#fff',
+            }}
+          >
+            Roberta
+          </span>
         </div>
 
         <Menu
@@ -91,23 +104,18 @@ export default function Layout() {
           style={{ flex: 1, border: 'none', background: 'transparent', paddingTop: 8 }}
         />
 
-        {/* 底部安全提示卡（视觉对应 Figma 升级卡） */}
-        <div
-          style={{
-            margin: '0 14px 20px',
-            padding: '14px 12px',
-            background: figmaColors.bgUpgrade,
-            borderRadius: 10,
-          }}
-        >
+        {/* 底部安全提示卡 */}
+        <CyberCard variant="cyan" stripe style={{ margin: '0 14px 20px' }}>
           <div
             style={{
               display: 'flex',
               alignItems: 'center',
               gap: 6,
-              color: figmaColors.green,
+              color: cyberColors.cyan,
               fontSize: 13,
               fontWeight: 600,
+              textTransform: 'uppercase',
+              letterSpacing: '0.04em',
             }}
           >
             <SafetyCertificateOutlined /> 安全模式
@@ -117,17 +125,17 @@ export default function Layout() {
               marginTop: 6,
               fontSize: 12,
               lineHeight: '18px',
-              color: 'rgba(255,255,255,0.7)',
+              color: cyberColors.textSecondary,
             }}
           >
             只读扫描，不会删除、移动或修改任何文件
           </div>
-        </div>
+        </CyberCard>
       </aside>
 
       {/* 右侧主体 */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-        {/* 顶栏 */}
+        {/* 顶栏 + 底部红色分隔线 */}
         <header
           style={{
             display: 'flex',
@@ -139,69 +147,67 @@ export default function Layout() {
           }}
         >
           <Input
-            className="figma-search"
+            className="cyber-search"
             prefix={<SearchOutlined style={{ color: 'rgba(255,255,255,0.4)' }} />}
             placeholder="搜索目录或文件"
-            style={{ maxWidth: 325, background: figmaColors.bgContainer, border: 'none' }}
+            style={{ maxWidth: 325, background: cyberColors.bgContainer }}
             allowClear
           />
-          <Button
-            type="primary"
+          <CyberButton
+            variant="red"
             icon={<DatabaseOutlined />}
             loading={scanning}
             onClick={handleScan}
           >
             {scanning ? '扫描中…' : data ? '重新扫描' : '开始扫描'}
-          </Button>
+          </CyberButton>
           <div style={{ flex: 1 }} />
-          {/* 可用空间卡片（视觉对应 Figma 用户卡） */}
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 12,
-              padding: '6px 14px',
-              background: figmaColors.bgContainer,
-              borderRadius: 10,
-              border: `1px solid ${figmaColors.borderWhite}`,
-            }}
-          >
-            <div
-              style={{
-                width: 34,
-                height: 34,
-                borderRadius: 10,
-                background: 'rgba(38,151,255,0.15)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: figmaColors.primary,
-              }}
-            >
-              <HddOutlined />
-            </div>
-            <div>
-              <div style={{ fontSize: 13, fontWeight: 600, color: '#fff' }}>
-                {freeGB != null ? `可用 ${formatGB(freeGB)}` : '可用 —'}
+          {/* 可用空间卡 */}
+          <CyberCard variant="cyan">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 0 }}>
+              <div
+                style={{
+                  width: 34,
+                  height: 34,
+                  background: 'rgba(94,246,255,0.1)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: cyberColors.cyan,
+                }}
+              >
+                <HddOutlined />
               </div>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>
-                {scannedAt ? `扫描于 ${scannedAt}` : '尚未扫描'}
+              <div>
+                <div
+                  style={{
+                    fontSize: 13,
+                    fontWeight: 600,
+                    color: '#fff',
+                    fontFamily: "'Rajdhani', sans-serif",
+                  }}
+                >
+                  {freeGB != null ? `可用 ${formatGB(freeGB)}` : '可用 —'}
+                </div>
+                <div style={{ fontSize: 11, color: cyberColors.textMuted }}>
+                  {scannedAt ? `扫描于 ${scannedAt}` : '尚未扫描'}
+                </div>
               </div>
             </div>
-          </div>
+          </CyberCard>
         </header>
+        <CyberDivider style={{ margin: '0 28px' }} />
 
         {/* 内容区 */}
         <main style={{ flex: 1, overflow: 'auto', padding: '0 28px 28px' }}>
           {error && (
             <div
               style={{
-                marginBottom: 16,
+                marginTop: 16,
                 padding: '10px 14px',
-                borderRadius: 10,
-                background: 'rgba(238,39,39,0.12)',
-                border: '1px solid rgba(238,39,39,0.3)',
-                color: '#FF6B6B',
+                background: 'rgba(247,80,73,0.1)',
+                border: `1px solid ${cyberColors.borderRed}`,
+                color: cyberColors.red,
                 fontSize: 13,
               }}
             >
