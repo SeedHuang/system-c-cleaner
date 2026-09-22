@@ -16,6 +16,7 @@ const DEFAULTS = {
   lowSpacePct: 10,
   growthWarnGB: 2,
   notifyEveryScan: true,
+  widgetVisible: true,
 };
 
 const isBool = (v) => typeof v === 'boolean';
@@ -31,6 +32,7 @@ const RULES = {
   lowSpacePct: isNumIn(1, 100),
   growthWarnGB: isNumIn(0, 10240),
   notifyEveryScan: isBool,
+  widgetVisible: isBool,
 };
 
 function readRaw(file) {

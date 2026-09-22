@@ -156,8 +156,13 @@ function triggerScan() {
     .catch((err) => log.warn('tray', '立即扫描失败', { err: err.message }));
 }
 
-function toggleWidget(visible) {
+function persistWidgetVisible(visible) {
   widgetVisible = visible;
+  saveSettings(SETTINGS_FILE, { widgetVisible: visible });
+}
+
+function toggleWidget(visible) {
+  persistWidgetVisible(visible);
   if (widgetHandle) widgetHandle.toggle(visible);
   log.info('widget', '切换小组件显隐', { visible });
 }
@@ -170,15 +175,15 @@ function createSystemWidget() {
     url: isDev ? 'http://localhost:8000/widget' : `http://localhost:${embeddedPort}/widget`,
     stateFile: WIDGET_STATE_FILE,
     showMain: showMainWindow,
-    // 小组件自身（右键菜单 / Alt+F4）隐藏或显示时，同步托盘勾选状态
+    // 小组件自身（右键菜单 / Alt+F4）隐藏或显示时，同步托盘勾选状态并持久化
     onVisibilityChange: (visible) => {
-      widgetVisible = visible;
+      persistWidgetVisible(visible);
       log.info('widget', '可见性变更，同步托盘状态', { visible });
     },
     isQuitting: () => isQuitting,
     log,
   });
-  widgetHandle.build();
+  widgetHandle.build(widgetVisible);
   log.info('widget', '小组件初始化完成', { visible: widgetVisible });
 }
 
@@ -221,8 +226,9 @@ async function runStartupElevateGuard() {
   const guard = createElevateGuard({
     probe: () => probeElevation({ psPath: resolvePowerShellPath(), spawnFn: spawn, log }),
     requestRestart: async () => {
-      const r = await apiRequest('POST', '/api/elevate-restart', { timeoutMs: 15000 });
-      log.info('elevate', '提权请求已提交，等待 UAC 授权', { elevatedScan: r && r.elevatedScan });
+      // 自启/静默（--hidden）触发提权时，让提权后的新进程继续驻留托盘不显示窗口
+      const r = await apiRequest('POST', `/api/elevate-restart?hidden=${hidden ? '1' : '0'}`, { timeoutMs: 15000 });
+      log.info('elevate', '提权请求已提交，等待 UAC 授权', { hidden, elevatedScan: r && r.elevatedScan });
     },
     log,
     getState: () => loadState(SCHEDULER_STATE_FILE),
@@ -284,10 +290,33 @@ ipcMain.handle('shell:open-path', async (_e, target) => {
   }
 });
 
+/** 等待提权结果（仅「已请求重启」后调用）：
+ *  授权成功 → monitor 会结束本进程，本函数随之中断（不会返回）；
+ *  仅 UAC 被拒（cancelled）或长时间无响应（timeout）时返回，随后正常创建窗口。 */
+function waitElevateSettled(timeoutMs = 70000) {
+  return new Promise((resolve) => {
+    const started = Date.now();
+    const poll = async () => {
+      try {
+        const st = await apiRequest('GET', '/api/status', { timeoutMs: 5000 });
+        if (st && st.elevatedScan && st.elevatedScan !== 'running') return resolve(st.elevatedScan);
+      } catch (err) {
+        // 提权重启期间服务可能正在退出，忽略并继续轮询
+      }
+      if (Date.now() - started >= timeoutMs) return resolve('timeout');
+      setTimeout(poll, 1000);
+    };
+    poll();
+  });
+}
+
 async function bootstrap() {
   log.info('main', '启动', { isDev, scanOnStart, hidden });
   log.info('main', '路径解析', { dataDir: paths.dataDir, scriptsDir: paths.scriptsDir, logDir: paths.logDir });
-  log.info('main', '生效配置', loadCfg());
+  const cfg = loadCfg();
+  log.info('main', '生效配置', cfg);
+  // 启动时读取小组件显隐偏好（托盘/右键关闭后已持久化，重启后保持）
+  widgetVisible = cfg.widgetVisible;
 
   if (!isDev) {
     try {
@@ -313,13 +342,22 @@ async function bootstrap() {
 
   if (scanOnStart) log.info('main', '识别到 --scan-on-start（提权重扫）');
   startElevateMonitor();
+
+  // 先完成启动提权判定再创建窗口：
+  // 未提权 → 请求 UAC 重启，旧进程不创建窗口（避免「主界面闪一下又消失」）；
+  // 授权成功则本进程会被 monitor 结束，窗口由提权后的新进程创建。
+  const elevateResult = await runStartupElevateGuard();
+  if (elevateResult === 'requested') {
+    const settled = await waitElevateSettled();
+    log.info('window', '启动提权未完成（UAC 被拒或超时），以普通权限继续运行', { settled });
+  }
+
   createWindow();
   createSystemWidget();
   createSystemTray();
   if (hidden) log.info('window', '隐藏启动（自启/静默），仅驻留托盘');
   else log.info('window', '正常显示窗口');
 
-  await runStartupElevateGuard();
   await startScheduler();
   log.info('main', '启动完成');
 }

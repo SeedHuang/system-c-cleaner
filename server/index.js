@@ -173,7 +173,7 @@ function scanOnce() {
  * 因此 flag 路径与 exe 路径必须通过命令行显式传入，
  * 否则 relaunch-admin.ps1 里的 $env:CLEANER_* 全为空，flag 会写到错误位置。
  */
-function buildElevateCommand(pid, flagPath, exePath) {
+function buildElevateCommand(pid, flagPath, exePath, hidden = false) {
   const parts = [
     "'-NoProfile'",
     "'-ExecutionPolicy'",
@@ -185,6 +185,7 @@ function buildElevateCommand(pid, flagPath, exePath) {
   ];
   if (flagPath) parts.push("'-FlagPath'", `'${flagPath}'`);
   if (exePath) parts.push("'-ExePath'", `'${exePath}'`);
+  if (hidden) parts.push("'-Hidden'"); // 自启/静默场景：提权后的新进程继续驻留托盘，不显示主窗口
   const start = `Start-Process -FilePath '${PS_EXE}' -Verb RunAs -WindowStyle Hidden -ArgumentList ${parts.join(',')}`;
   // UAC 被拒绝时 Start-Process 抛错：用非 0 退出码告知调用方，避免白等 60 秒才允许重试
   return `try { ${start} } catch { Write-Output $_.Exception.Message; exit 1 }`;
@@ -294,7 +295,8 @@ async function handle(req, res) {
       }
       elevatedScan = 'running';
       elevateStartedAt = Date.now();
-      const elevateCmd = buildElevateCommand(process.pid, ELEVATE_FLAG, process.env.CLEANER_EXE_PATH || '');
+      const hidden = url.searchParams.get('hidden') === '1'; // 自启/静默启动（--hidden）触发提权时，提权后的进程继续驻留托盘
+      const elevateCmd = buildElevateCommand(process.pid, ELEVATE_FLAG, process.env.CLEANER_EXE_PATH || '', hidden);
       log.info('elevate', '收到提权重启请求，等待 UAC 授权', {
         pid: process.pid,
         flagPath: ELEVATE_FLAG,

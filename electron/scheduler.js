@@ -184,7 +184,7 @@ function createScheduler({
       cfg,
     });
     if (!reason) {
-      log.debug('scheduler', '未到触发条件', { lastScanAt: state.lastScanAt, lastDailyKey: state.lastDailyKey });
+      log.info('scheduler', '未到触发条件', { lastScanAt: state.lastScanAt, lastDailyKey: state.lastDailyKey });
       return { reason: null, triggered: false, notified };
     }
 

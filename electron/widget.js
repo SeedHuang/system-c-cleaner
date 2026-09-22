@@ -42,7 +42,7 @@ function createWidget({ BrowserWindow, Menu, screen, url, stateFile, showMain, o
 
   const isVisible = () => widgetWindow !== null && !widgetWindow.isDestroyed() && widgetWindow.isVisible();
 
-  function build() {
+  function build(visible = true) {
     if (widgetWindow) return widgetWindow;
     const pos = resolvePosition();
     widgetWindow = new BrowserWindow({
@@ -55,6 +55,7 @@ function createWidget({ BrowserWindow, Menu, screen, url, stateFile, showMain, o
       resizable: false,
       alwaysOnTop: true,
       skipTaskbar: true,
+      show: visible, // 启动时按设置决定是否显示（隐藏时不闪现）
       webPreferences: {
         contextIsolation: true,
         nodeIntegration: false,

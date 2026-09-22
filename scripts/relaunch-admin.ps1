@@ -5,7 +5,7 @@
 # variables (UAC creates it with a fresh logon token), so CLEANER_DATA_DIR and
 # CLEANER_EXE_PATH are EMPTY here. The caller must pass -FlagPath and -ExePath
 # explicitly; the env vars below are only a fallback for manual runs.
-param([int]$OldPid, [string]$FlagPath, [string]$ExePath)
+param([int]$OldPid, [string]$FlagPath, [string]$ExePath, [switch]$Hidden)
 
 $ErrorActionPreference = 'SilentlyContinue'
 $root  = Split-Path $PSScriptRoot -Parent
@@ -57,7 +57,11 @@ $exe = $ExePath
 if (-not $exe) { $exe = $env:CLEANER_EXE_PATH }
 if ($exe) {
     Write-Log "starting elevated app: $exe --scan-on-start"
-    Start-Process -FilePath $exe -ArgumentList '--scan-on-start' -WorkingDirectory $root -WindowStyle Hidden
+    # 正常启动需显示主窗口：不能无条件加 -WindowStyle Hidden，否则会隐藏应用窗口导致只剩托盘。
+    # 自启/静默场景（原进程带 --hidden 触发提权）由调用方传 -Hidden，这里透传 --hidden 保持驻留托盘。
+    $startArgs = @('--scan-on-start')
+    if ($Hidden) { $startArgs += '--hidden' }
+    Start-Process -FilePath $exe -ArgumentList $startArgs -WorkingDirectory $root
     Write-Log 'elevated app start issued'
 } else {
     # Dev fallback: run the node server directly.

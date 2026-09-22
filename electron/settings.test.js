@@ -30,6 +30,7 @@ test('DEFAULTS 含 Phase 4 全部字段与确认过的默认值', () => {
   assert.strictEqual(DEFAULTS.lowSpacePct, 10);
   assert.strictEqual(DEFAULTS.growthWarnGB, 2);
   assert.strictEqual(DEFAULTS.notifyEveryScan, true);
+  assert.strictEqual(DEFAULTS.widgetVisible, true);
 });
 
 test('无文件 → 返回默认值（且为副本，不共享引用）', () => {
@@ -97,6 +98,10 @@ test('saveSettings 合并写回并可再读出', () => {
   const s2 = loadSettings(f);
   assert.strictEqual(s2.autoScan, false);
   assert.strictEqual(s2.lowSpacePct, 20);
+  saveSettings(f, { widgetVisible: false });
+  assert.strictEqual(loadSettings(f).widgetVisible, false);
+  saveSettings(f, { widgetVisible: true });
+  assert.strictEqual(loadSettings(f).widgetVisible, true);
 });
 
 test('saveSettings 自动创建目录，写入失败返回 false 不抛错', () => {

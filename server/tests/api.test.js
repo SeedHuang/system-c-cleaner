@@ -102,6 +102,14 @@ test('buildElevateCommand 未传路径时不追加可选参数', () => {
   assert.ok(!cmd.includes('-ExePath'));
 });
 
+test('buildElevateCommand hidden=true 追加 -Hidden（自启静默提权驻留托盘）', () => {
+  const { buildElevateCommand } = require('../index.js');
+  const cmd = buildElevateCommand(12345, 'C:\\f', 'C:\\e.exe', true);
+  assert.ok(cmd.includes("'-Hidden'"));
+  const cmd2 = buildElevateCommand(12345, 'C:\\f', 'C:\\e.exe');
+  assert.ok(!cmd2.includes('-Hidden'));
+});
+
 test('buildElevateCommand 用 try/catch 暴露 UAC 拒绝（非 0 退出码）', () => {
   const { buildElevateCommand } = require('../index.js');
   const cmd = buildElevateCommand(12345, 'C:\\f', 'C:\\e.exe');

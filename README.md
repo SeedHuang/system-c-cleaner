@@ -185,6 +185,7 @@ node scripts/migrate-data.js --help
 | `lowSpacePct` | `10` | 1–100 | 剩余空间低于该百分比 → 告警通知 |
 | `growthWarnGB` | `2` | 0–10240 | 单次增长超过该值（GB）→ 告警通知 |
 | `notifyEveryScan` | `true` | true/false | false = 安静模式，仅告警时通知 |
+| `widgetVisible` | `true` | true/false | 桌面小组件显隐偏好（与托盘「显示/隐藏桌面小组件」勾选同步） |
 
 ---
 
