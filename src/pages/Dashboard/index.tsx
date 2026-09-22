@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useModel, useNavigate } from '@umijs/max';
-import { Button, Card, Col, Empty, Row, Spin } from 'antd';
+import { Col, Empty, Row, Spin } from 'antd';
 import {
   DatabaseOutlined,
   HddOutlined,
@@ -10,13 +10,14 @@ import {
 import BarList from '@/components/BarList';
 import StatCard from '@/components/StatCard';
 import StorageDonut from '@/components/StorageDonut';
-import { cleanupLevels, figmaColors } from '@/setup/theme';
+import { CyberButton, CyberCard, SectionTitle } from '@/components/cyber';
+import { cleanupLevels, cyberColors } from '@/setup/theme';
 import { formatGB } from '@/utils/format';
 import { elevateRestart, getStatus } from '@/services/scan';
 
 const barColors = [
-  '#2697FF', '#3AA0FF', '#4FA9FF', '#63B2FF', '#79DFFF',
-  '#8FD9FF', '#A6C8E8', '#B5C9DB',
+  cyberColors.red, cyberColors.orange, cyberColors.yellow, cyberColors.green,
+  cyberColors.cyan, cyberColors.blue, cyberColors.purple, cyberColors.contrast,
 ];
 
 const levelOrder = ['safe', 'caution', 'keep', 'never'] as const;
@@ -84,29 +85,29 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <Card bordered={false} style={{ textAlign: 'center', padding: '60px 0' }}>
+      <CyberCard style={{ textAlign: 'center', padding: '60px 0' }}>
         <Spin tip="读取扫描结果…" />
-      </Card>
+      </CyberCard>
     );
   }
 
   if (!data) {
     return (
-      <Card bordered={false} style={{ marginTop: 60 }}>
+      <CyberCard style={{ marginTop: 60 }}>
         <Empty description="还没有扫描数据">
-          <Button
-            type="primary"
+          <CyberButton
+            variant="red"
             icon={<DatabaseOutlined />}
             loading={scanning}
             onClick={startScan}
           >
             {scanning ? '正在扫描，请稍候…' : '开始扫描 C 盘'}
-          </Button>
-          <div style={{ marginTop: 12, fontSize: 12, color: 'rgba(255,255,255,0.45)' }}>
+          </CyberButton>
+          <div style={{ marginTop: 12, fontSize: 12, color: cyberColors.textMuted }}>
             只读扫描，不会删除、移动或修改任何文件，预计 1~3 分钟
           </div>
         </Empty>
-      </Card>
+      </CyberCard>
     );
   }
 
@@ -147,7 +148,7 @@ export default function DashboardPage() {
             title="总容量"
             value={formatGB(disk.totalGB)}
             sub="C盘"
-            color={figmaColors.primary}
+            color={cyberColors.cyan}
             icon={<DatabaseOutlined />}
           />
         </Col>
@@ -156,7 +157,7 @@ export default function DashboardPage() {
             title="已使用"
             value={formatGB(disk.usedGB)}
             sub={`占 ${disk.totalGB ? ((disk.usedGB / disk.totalGB) * 100).toFixed(1) : 0}%`}
-            color={figmaColors.orange}
+            color={cyberColors.orange}
             icon={<PieChartOutlined />}
           />
         </Col>
@@ -165,7 +166,7 @@ export default function DashboardPage() {
             title="可用空间"
             value={formatGB(disk.freeGB)}
             sub="当前剩余"
-            color={figmaColors.green}
+            color={cyberColors.green}
             icon={<HddOutlined />}
           />
         </Col>
@@ -174,7 +175,7 @@ export default function DashboardPage() {
             title="可安全清理预估"
             value={`${formatGB(byLevel.safe)}`}
             sub="不含谨慎项"
-            color={figmaColors.cyan}
+            color={cyberColors.red}
             icon={<ThunderboltOutlined />}
           />
         </Col>
@@ -182,7 +183,8 @@ export default function DashboardPage() {
 
       <Row gutter={20} style={{ marginTop: 20 }}>
         <Col span={16}>
-          <Card title="顶层目录排行" bordered={false}>
+          <CyberCard>
+            <SectionTitle style={{ marginBottom: 16 }}>顶层目录排行</SectionTitle>
             {folders.length ? (
               <BarList
                 items={folders}
@@ -196,42 +198,41 @@ export default function DashboardPage() {
                 style={{
                   marginTop: 12,
                   padding: '12px 14px',
-                  borderRadius: 10,
-                  background: 'rgba(255,207,38,0.12)',
-                  border: '1px solid rgba(255,207,38,0.35)',
-                  color: '#FFD666',
+                  background: 'rgba(240,181,55,0.08)',
+                  border: `1px solid rgba(240,181,55,0.5)`,
+                  color: cyberColors.yellow,
                   fontSize: 13,
                 }}
               >
                 <div>检测到 {unscannedCount} 个目录因权限不足未扫描，以管理员身份重新扫描可获得更完整数据。</div>
                 <div style={{ marginTop: 10, display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
-                  <Button
-                    size="small"
+                  <CyberButton
                     icon={<DatabaseOutlined />}
                     loading={elevate === 'requesting'}
                     disabled={elevateRunning}
                     onClick={handleElevate}
                   >
                     一键以管理员身份重扫
-                  </Button>
+                  </CyberButton>
                   {elevateRunning && <Spin size="small" />}
                   {elevateText && <span style={{ color: 'rgba(255,255,255,0.75)' }}>{elevateText}</span>}
                 </div>
               </div>
             )}
-          </Card>
-          <Card title="空间构成（按清理分类）" bordered={false} style={{ marginTop: 20 }}>
+          </CyberCard>
+          <CyberCard style={{ marginTop: 20 }}>
+            <SectionTitle style={{ marginBottom: 16 }}>空间构成（按清理分类）</SectionTitle>
             <BarList
               items={segments.map((s) => ({ name: s.label, sizeGB: s.value, color: s.color, level: s.level }))}
               onItemClick={(it) => it.level && navigate(`/cleanup?level=${it.level}`)}
             />
-          </Card>
+          </CyberCard>
         </Col>
         <Col span={8}>
-          <Card bordered={false}>
+          <CyberCard>
             <div style={{ textAlign: 'center', marginBottom: 8 }}>
-              <div style={{ fontSize: 15, fontWeight: 600, color: '#fff' }}>存储用量</div>
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)' }}>已用空间构成</div>
+              <SectionTitle>存储用量</SectionTitle>
+              <div style={{ fontSize: 12, color: cyberColors.textMuted }}>已用空间构成</div>
             </div>
             <StorageDonut
               segments={segments}
@@ -239,7 +240,7 @@ export default function DashboardPage() {
               centerSub={`共 ${formatGB(disk.totalGB)}`}
               onSegmentClick={(seg) => seg.level && navigate(`/cleanup?level=${seg.level}`)}
             />
-          </Card>
+          </CyberCard>
         </Col>
       </Row>
     </div>

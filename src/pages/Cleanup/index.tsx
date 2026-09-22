@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useModel } from '@umijs/max';
-import { Button, Card, Empty, message, Spin, Tag } from 'antd';
+import { Empty, message, Spin, Tag } from 'antd';
 import { FolderOpenOutlined } from '@ant-design/icons';
 import type { ScanItem } from '@/services/scan';
-import { cleanupLevels } from '@/setup/theme';
+import { cleanupLevels, cyberColors } from '@/setup/theme';
+import { CyberButton, CyberCard, SectionTitle } from '@/components/cyber';
 import { formatGB } from '@/utils/format';
 import { openInExplorer } from '@/utils/shell';
 
@@ -42,21 +43,21 @@ export default function CleanupPage() {
 
   if (loading) {
     return (
-      <Card bordered={false} style={{ textAlign: 'center', padding: '60px 0' }}>
+      <CyberCard style={{ textAlign: 'center', padding: '60px 0' }}>
         <Spin tip="读取扫描结果…" />
-      </Card>
+      </CyberCard>
     );
   }
 
   if (!data) {
     return (
-      <Card bordered={false} style={{ marginTop: 60 }}>
+      <CyberCard style={{ marginTop: 60 }}>
         <Empty description="还没有扫描数据，请先执行扫描">
-          <Button type="primary" loading={scanning} onClick={startScan}>
+          <CyberButton variant="red" loading={scanning} onClick={startScan}>
             开始扫描
-          </Button>
+          </CyberButton>
         </Empty>
-      </Card>
+      </CyberCard>
     );
   }
 
@@ -70,17 +71,23 @@ export default function CleanupPage() {
         const total = group.reduce((s, it) => s + (it.sizeGB ?? 0), 0);
         const unscanned = group.filter((it) => it.status === 'unscanned').length;
         return (
-          <Card key={lv} id={`group-${lv}`} bordered={false}>
+          <CyberCard key={lv} id={`group-${lv}`}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-              <span
-                style={{ width: 10, height: 10, borderRadius: '50%', background: level.color }}
-              />
-              <span style={{ fontSize: 16, fontWeight: 600, color: '#fff' }}>{level.label}</span>
-              <Tag style={{ background: `${level.color}22`, color: level.color, border: 'none' }}>
+              <SectionTitle style={{ fontSize: 16, color: cyberColors.red }}>{level.label}</SectionTitle>
+              <Tag
+                style={{
+                  background: 'rgba(94,246,255,0.1)',
+                  color: cyberColors.cyan,
+                  border: `1px solid ${cyberColors.borderCyan}`,
+                  borderRadius: 0,
+                  fontFamily: "'Rajdhani', sans-serif",
+                  fontWeight: 600,
+                }}
+              >
                 约 {formatGB(total)}
               </Tag>
               {unscanned > 0 && (
-                <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)' }}>
+                <span style={{ fontSize: 12, color: cyberColors.textMuted }}>
                   {unscanned} 项因权限不足未扫描
                 </span>
               )}
@@ -91,10 +98,9 @@ export default function CleanupPage() {
                   <div
                     key={it.id}
                     style={{
-                      background: '#1B1E2B',
-                      borderRadius: 10,
+                      background: cyberColors.bgLayout,
                       padding: 14,
-                      border: '1px solid rgba(255,255,255,0.06)',
+                      borderTop: `1px solid rgba(247,80,73,0.5)`,
                     }}
                   >
                     <div
@@ -105,14 +111,22 @@ export default function CleanupPage() {
                         gap: 10,
                       }}
                     >
-                      <span style={{ fontSize: 14, fontWeight: 600, color: '#F0F0F0' }}>
+                      <span
+                        style={{
+                          fontSize: 14,
+                          fontWeight: 600,
+                          fontFamily: "'Rajdhani', sans-serif",
+                          color: cyberColors.textPrimary,
+                        }}
+                      >
                         {it.name}
                       </span>
                       <span
                         style={{
-                          fontSize: 14,
+                          fontSize: 15,
                           fontWeight: 700,
-                          color: it.status === 'unscanned' ? 'rgba(255,255,255,0.4)' : level.color,
+                          fontFamily: "'Rajdhani', sans-serif",
+                          color: it.status === 'unscanned' ? cyberColors.textMuted : cyberColors.cyan,
                           whiteSpace: 'nowrap',
                         }}
                       >
@@ -122,13 +136,19 @@ export default function CleanupPage() {
                     <div className="path-text" style={{ marginTop: 6 }}>
                       {it.path}
                     </div>
-                    <div style={{ marginTop: 10, fontSize: 13, color: '#B5C9DB', lineHeight: 1.6 }}>
+                    <div
+                      style={{
+                        marginTop: 10,
+                        fontSize: 13,
+                        color: cyberColors.textSecondary,
+                        lineHeight: 1.6,
+                      }}
+                    >
                       {it.reason}
                     </div>
                     {shouldShowOpenButton(it) && (
                       <div style={{ marginTop: 10 }}>
-                        <Button
-                          size="small"
+                        <CyberButton
                           icon={<FolderOpenOutlined />}
                           loading={busyId === it.id}
                           onClick={async () => {
@@ -142,7 +162,7 @@ export default function CleanupPage() {
                           }}
                         >
                           打开所在文件夹
-                        </Button>
+                        </CyberButton>
                       </div>
                     )}
                     {it.action && (
@@ -165,7 +185,7 @@ export default function CleanupPage() {
             ) : (
               <Empty description="暂无此项" image={Empty.PRESENTED_IMAGE_SIMPLE} />
             )}
-          </Card>
+          </CyberCard>
         );
       })}
     </div>
