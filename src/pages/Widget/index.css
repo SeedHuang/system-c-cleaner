@@ -1,4 +1,4 @@
-/* Widget 悬浮卡片：透明窗口 + 深色圆角卡片，主体可拖拽 */
+/* Widget 悬浮卡片：CP2077 风格 —— 透明窗口 + 双层 clip-path 切角描边近黑卡，主体可拖拽 */
 html,
 body,
 #root {
@@ -8,25 +8,44 @@ body,
   overflow: hidden;
 }
 
+/* 外层 = 青色 30% 描边层（1px padding 撑出描边）；窗口透明，切角处真实镂空 */
 .widget-card {
   -webkit-app-region: drag; /* 整卡可拖拽移动 */
-  background: rgba(33, 35, 50, 0.94); /* #212332 */
-  border: 1px solid #2a2d3e;
-  border-radius: 10px;
-  color: #e6e6e6;
-  padding: 10px 12px;
+  position: relative;
+  z-index: 0;
+  clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+  background: rgba(94, 246, 255, 0.3);
+  /* 1px 描边 + 原内容内边距 10px 12px */
+  padding: 11px 13px;
   width: 100%;
   height: 100%;
   box-sizing: border-box;
   cursor: pointer;
-  font-family: -apple-system, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+  font-family: 'Rajdhani', -apple-system, 'Segoe UI', 'Microsoft YaHei', sans-serif;
   user-select: none;
   overflow: hidden;
 }
 
+/* 内层：近黑底 + 左侧青色竖条（Figma Card/Frame-M）+ 扫描线纹理，均在内容层之下 */
+.widget-card::before {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  z-index: -1;
+  clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+  background:
+    linear-gradient(90deg, transparent 0 8px, rgba(94, 246, 255, 0.3) 8px 13px, transparent 13px),
+    repeating-linear-gradient(transparent 0 3px, rgba(255, 255, 255, 0.02) 3px 4px),
+    #0e0e17;
+}
+
+/* 标题：红色大写小标签（Figma 人物卡 NAME 规格） */
 .widget-title {
-  font-size: 12px;
-  color: #9aa0b4;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: -0.04em;
+  color: #f75049;
   margin-bottom: 6px;
 }
 
@@ -36,35 +55,39 @@ body,
   gap: 8px;
 }
 
+/* 方形进度条：轨道白 6%，填充青 */
 .widget-bar {
   flex: 1;
   height: 8px;
-  background: #2a2d3e;
-  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.06);
   overflow: hidden;
 }
 
 .widget-bar-fill {
   height: 100%;
-  background: #2697ff;
-  border-radius: 4px;
+  background: #5ef6ff;
   transition: width 0.3s;
 }
 
+/* 百分比：Rajdhani Bold 青色数值 */
 .widget-pct {
-  font-size: 14px;
-  font-weight: 600;
-  color: #2697ff;
+  font-size: 15px;
+  font-weight: 700;
+  color: #5ef6ff;
   min-width: 40px;
   text-align: right;
+  line-height: 1;
 }
 
+/* 已用/剩余：上缘红色分隔线（Figma 人物卡 1px 50% 规格） */
 .widget-stats {
   display: flex;
   justify-content: space-between;
   font-size: 12px;
-  color: #c9cddd;
+  color: rgba(255, 255, 255, 0.6);
   margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(247, 80, 73, 0.5);
 }
 
 .widget-tops {
@@ -77,19 +100,24 @@ body,
 .widget-top {
   display: flex;
   justify-content: space-between;
-  font-size: 11px;
-  color: #9aa0b4;
+  font-size: 12px;
 }
 
 .widget-top-name {
+  color: #f0f0f0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   max-width: 65%;
 }
 
+.widget-top-size {
+  font-weight: 600;
+  color: #5ef6ff;
+}
+
 .widget-empty {
-  color: #9aa0b4;
+  color: rgba(255, 255, 255, 0.4);
   font-size: 12px;
   padding: 8px 0;
   text-align: center;

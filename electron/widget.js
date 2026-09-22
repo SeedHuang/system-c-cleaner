@@ -5,7 +5,7 @@
 const { loadWidgetState, saveWidgetState } = require('./widget-state');
 
 const WIDGET_W = 320;
-const WIDGET_H = 150;
+const WIDGET_H = 176;
 
 function createWidget({ BrowserWindow, Menu, screen, url, stateFile, showMain, onVisibilityChange, isQuitting, log }) {
   let widgetWindow = null;
