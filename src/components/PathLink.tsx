@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react';
 import type { CSSProperties, MouseEvent, ReactNode } from 'react';
 import { Button, message, Tooltip } from 'antd';
 import { FolderOpenOutlined } from '@ant-design/icons';
-import { figmaColors } from '@/setup/theme';
+import { cyberColors } from '@/setup/theme';
 import { openInExplorer } from '@/utils/shell';
 
 type PathLinkProps = {
@@ -74,7 +74,7 @@ export default function PathLink({
         alignItems: 'center',
         gap: 6,
         cursor: 'pointer',
-        color: hover ? figmaColors.primary : style?.color ?? '#fff',
+        color: hover ? cyberColors.cyan : style?.color ?? '#fff',
         textDecoration: hover ? 'underline' : style?.textDecoration ?? 'none',
         transition: 'color 0.15s',
       }}

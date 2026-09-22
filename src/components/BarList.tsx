@@ -1,4 +1,5 @@
 import { formatGB } from '@/utils/format';
+import { cyberColors } from '@/setup/theme';
 
 export interface BarItem {
   name: string;
@@ -30,7 +31,7 @@ export default function BarList({ items, onItemClick }: Props) {
             transition: 'background 0.15s',
           }}
           onMouseEnter={(e) => {
-            if (onItemClick) e.currentTarget.style.background = 'rgba(38,151,255,0.06)';
+            if (onItemClick) e.currentTarget.style.background = 'rgba(247,80,73,0.08)';
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.background = 'transparent';
@@ -45,15 +46,21 @@ export default function BarList({ items, onItemClick }: Props) {
             }}
           >
             <span style={{ fontSize: 13, color: '#F0F0F0' }}>{it.name}</span>
-            <span style={{ fontSize: 13, fontWeight: 600, color: '#fff' }}>
+            <span
+              style={{
+                fontSize: 14,
+                fontWeight: 600,
+                fontFamily: "'Rajdhani', sans-serif",
+                color: cyberColors.cyan,
+              }}
+            >
               {formatGB(it.sizeGB)}
             </span>
           </div>
           <div
             style={{
-              height: 6,
+              height: 8,
               background: 'rgba(255,255,255,0.06)',
-              borderRadius: 4,
               overflow: 'hidden',
             }}
           >
@@ -61,8 +68,7 @@ export default function BarList({ items, onItemClick }: Props) {
               style={{
                 width: `${(it.sizeGB / max) * 100}%`,
                 height: '100%',
-                borderRadius: 4,
-                background: it.color || '#2697FF',
+                background: it.color || cyberColors.red,
               }}
             />
           </div>

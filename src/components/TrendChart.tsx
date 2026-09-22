@@ -33,7 +33,7 @@ export default function TrendChart({ points, height = 160 }: { points: TrendPoin
   }
   return (
     <svg viewBox={`0 0 600 ${height}`} style={{ width: '100%', height: 'auto', display: 'block' }}>
-      <polyline points={view.poly} fill="none" stroke="#2697FF" strokeWidth={2} />
+      <polyline points={view.poly} fill="none" stroke="#F75049" strokeWidth={2} />
       <text x={8} y={height - 4} fontSize={10} fill="rgba(255,255,255,0.5)">{view.minLabel}</text>
       <text x={8} y={12} fontSize={10} fill="rgba(255,255,255,0.5)">{view.maxLabel}</text>
     </svg>

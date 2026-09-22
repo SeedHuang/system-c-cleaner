@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
-import { figmaColors } from '@/setup/theme';
+import { cyberColors } from '@/setup/theme';
+import { CyberCard } from '@/components/cyber';
 
 interface Props {
   title: string;
@@ -9,55 +10,57 @@ interface Props {
   icon?: ReactNode;
 }
 
-/** 概览统计卡片 */
+/** 概览统计卡片（CP2077：红大写标签 + 青色数值） */
 export default function StatCard({ title, value, sub, color, icon }: Props) {
+  const accent = color ?? cyberColors.cyan;
   return (
-    <div
-      style={{
-        background: figmaColors.bgContainer,
-        borderRadius: 10,
-        padding: '18px 20px',
-        border: `1px solid ${figmaColors.borderPrimary}`,
-        display: 'flex',
-        alignItems: 'center',
-        gap: 14,
-      }}
-    >
-      {icon && (
-        <div
-          style={{
-            width: 44,
-            height: 44,
-            borderRadius: 10,
-            background: color ? `${color}1F` : 'rgba(38,151,255,0.15)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: color || figmaColors.primary,
-            fontSize: 20,
-            flexShrink: 0,
-          }}
-        >
-          {icon}
-        </div>
-      )}
-      <div style={{ minWidth: 0 }}>
-        <div style={{ fontSize: 12, color: figmaColors.textSecondary }}>{title}</div>
-        <div
-          style={{
-            fontSize: 22,
-            fontWeight: 700,
-            color: '#fff',
-            lineHeight: 1.3,
-            whiteSpace: 'nowrap',
-          }}
-        >
-          {value}
-        </div>
-        {sub && (
-          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)' }}>{sub}</div>
+    <CyberCard variant="cyan" stripe>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+        {icon && (
+          <div
+            style={{
+              width: 44,
+              height: 44,
+              background: `${accent}1F`,
+              border: `1px solid ${accent}55`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: accent,
+              fontSize: 20,
+              flexShrink: 0,
+            }}
+          >
+            {icon}
+          </div>
         )}
+        <div style={{ minWidth: 0 }}>
+          <div
+            style={{
+              fontSize: 11,
+              color: cyberColors.red,
+              textTransform: 'uppercase',
+              letterSpacing: '0.06em',
+              fontWeight: 600,
+            }}
+          >
+            {title}
+          </div>
+          <div
+            style={{
+              fontSize: 24,
+              fontWeight: 700,
+              fontFamily: "'Rajdhani', sans-serif",
+              color: cyberColors.cyan,
+              lineHeight: 1.2,
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {value}
+          </div>
+          {sub && <div style={{ fontSize: 11, color: cyberColors.textMuted }}>{sub}</div>}
+        </div>
       </div>
-    </div>
+    </CyberCard>
   );
 }

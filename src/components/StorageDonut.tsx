@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { figmaColors } from '@/setup/theme';
+import { cyberColors } from '@/setup/theme';
 
 export interface DonutSegment {
   label: string;
@@ -86,10 +86,18 @@ export default function StorageDonut({
             pointerEvents: 'none',
           }}
         >
-          <span style={{ fontSize: 34, fontWeight: 700, color: '#fff', lineHeight: 1.1 }}>
+          <span
+            style={{
+              fontSize: 34,
+              fontWeight: 700,
+              fontFamily: "'Rajdhani', sans-serif",
+              color: cyberColors.cyan,
+              lineHeight: 1.1,
+            }}
+          >
             {centerTitle}
           </span>
-          <span style={{ fontSize: 13, color: figmaColors.textSecondary, marginTop: 4 }}>
+          <span style={{ fontSize: 13, color: cyberColors.textSecondary, marginTop: 4 }}>
             {centerSub}
           </span>
         </div>
@@ -115,11 +123,10 @@ export default function StorageDonut({
               gap: 8,
               cursor: onSegmentClick ? 'pointer' : 'default',
               padding: '2px 4px',
-              borderRadius: 6,
               transition: 'background 0.15s',
             }}
             onMouseEnter={(e) => {
-              if (onSegmentClick) e.currentTarget.style.background = 'rgba(38,151,255,0.06)';
+              if (onSegmentClick) e.currentTarget.style.background = 'rgba(247,80,73,0.08)';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.background = 'transparent';
@@ -134,10 +141,17 @@ export default function StorageDonut({
                 flexShrink: 0,
               }}
             />
-            <span style={{ fontSize: 12, color: figmaColors.textSecondary, flex: 1 }}>
+            <span style={{ fontSize: 12, color: cyberColors.textSecondary, flex: 1 }}>
               {seg.label}
             </span>
-            <span style={{ fontSize: 12, fontWeight: 600, color: '#fff' }}>
+            <span
+              style={{
+                fontSize: 12,
+                fontWeight: 600,
+                fontFamily: "'Rajdhani', sans-serif",
+                color: cyberColors.cyan,
+              }}
+            >
               {seg.value.toFixed(1)} GB
             </span>
           </div>
