@@ -117,6 +117,13 @@ function createWindow() {
     height: 800,
     show: !hidden, // --hidden（自启/静默）时不显示窗口，仅进托盘
     autoHideMenuBar: true, // 隐藏原生菜单栏（File/Edit/View…），按 Alt 也不显示
+    // 隐藏原生标题栏（紫色系统栏），保留原生最小化/最大化/关闭按钮（CP2077 主题化）
+    titleBarStyle: 'hidden',
+    titleBarOverlay: {
+      color: '#0E0E17',
+      symbolColor: '#F0F0F0',
+      height: 40,
+    },
     icon: path.join(__dirname, 'assets', 'app-icon.png'), // 窗口/任务栏图标（打包后在 asar 内可读）
     webPreferences: {
       contextIsolation: true,

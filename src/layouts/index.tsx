@@ -1,3 +1,4 @@
+import type React from 'react';
 import { Outlet, useLocation, useNavigate, useModel } from '@umijs/max';
 import { Input, Menu, message } from 'antd';
 import {
@@ -135,22 +136,23 @@ export default function Layout() {
 
       {/* 右侧主体 */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-        {/* 顶栏 + 底部红色分隔线 */}
+        {/* 顶栏 + 底部红色分隔线（-webkit-app-region: drag 充当标题栏；交互元素需 no-drag） */}
         <header
           style={{
             display: 'flex',
             alignItems: 'center',
             gap: 16,
-            padding: '20px 28px',
+            padding: '20px 148px 20px 28px', /* 右侧留白避开原生窗口控制按钮 */
             height: 88,
             flexShrink: 0,
-          }}
+            WebkitAppRegion: 'drag',
+          } as React.CSSProperties}
         >
           <Input
             className="cyber-search"
             prefix={<SearchOutlined style={{ color: 'rgba(255,255,255,0.4)' }} />}
             placeholder="搜索目录或文件"
-            style={{ maxWidth: 325 }}
+            style={{ maxWidth: 325, WebkitAppRegion: 'no-drag' } as React.CSSProperties}
             allowClear
           />
           <CyberButton
@@ -158,12 +160,16 @@ export default function Layout() {
             icon={<DatabaseOutlined />}
             loading={scanning}
             onClick={handleScan}
+            style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
           >
             {scanning ? '扫描中…' : data ? '重新扫描' : '开始扫描'}
           </CyberButton>
           <div style={{ flex: 1 }} />
           {/* 可用空间卡 */}
-          <CyberCard variant="cyan">
+          <CyberCard
+            variant="cyan"
+            style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
+          >
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 0 }}>
               <div
                 style={{
