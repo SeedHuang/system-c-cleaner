@@ -1,4 +1,5 @@
-import { Card } from 'antd';
+import { CyberCard, SectionTitle } from '@/components/cyber';
+import { cyberColors } from '@/setup/theme';
 
 interface Guide {
   title: string;
@@ -56,13 +57,11 @@ export default function GuidePage() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       {guides.map((g) => (
-        <Card key={g.title} bordered={false}>
-          <div style={{ fontSize: 15, fontWeight: 600, color: '#fff', marginBottom: 12 }}>
-            {g.title}
-          </div>
+        <CyberCard key={g.title}>
+          <SectionTitle style={{ marginBottom: 12 }}>{g.title}</SectionTitle>
           <ol style={{ margin: 0, paddingLeft: 20, display: 'flex', flexDirection: 'column', gap: 8 }}>
             {g.steps.map((s, i) => (
-              <li key={i} style={{ fontSize: 13, color: '#B5C9DB', lineHeight: 1.7 }}>
+              <li key={i} style={{ fontSize: 13, color: cyberColors.textSecondary, lineHeight: 1.7 }}>
                 {s}
               </li>
             ))}
@@ -72,14 +71,14 @@ export default function GuidePage() {
               <div className="guide-code">{g.code}</div>
             </div>
           )}
-        </Card>
+        </CyberCard>
       ))}
-      <Card bordered={false}>
-        <div style={{ fontSize: 13, color: '#B5C9DB', lineHeight: 1.8 }}>
+      <CyberCard variant="red">
+        <div style={{ fontSize: 13, color: cyberColors.textSecondary, lineHeight: 1.8 }}>
           ⚠️ 安全提醒：以上命令均为官方系统自带功能，但请务必一条条执行、看清说明。
           本工具只做分析，所有清理操作由你自己确认后执行。执行前建议先做系统还原点或备份重要文件。
         </div>
-      </Card>
+      </CyberCard>
     </div>
   );
 }

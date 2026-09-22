@@ -6,7 +6,7 @@ scan-result.json
 .history
 .DS_Store
 *.local
-history/
+/history/
 logs/
 dist_electron/
 .electron-cache/

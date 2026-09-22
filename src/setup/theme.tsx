@@ -79,6 +79,3 @@ export const cyberTheme = {
     },
   },
 };
-
-/** @deprecated 临时兼容别名，Task 7 移除。新代码一律用 cyberColors */
-export const figmaColors = cyberColors;
