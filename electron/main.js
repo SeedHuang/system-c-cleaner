@@ -1,6 +1,6 @@
 /**
  * Roberta 主进程
- * 开发：内嵌 server(8090) 失败则复用现有服务，窗口加载 http://localhost:8000（umi dev + proxy）
+ * 开发：内嵌 server(8090) 失败则复用现有服务，窗口加载 Umi dev 实际端口（scripts/dev.js 解析 Umi 输出注入 UMI_DEV_PORT，未注入时回退 8000）
  * 生产：内嵌 server(8090 退避) 托管 asar 内 dist/，窗口加载 http://localhost:<实际端口>
  * Phase 2：系统托盘（关窗最小化、托盘菜单）、开机自启（--hidden 隐藏启动）、托盘立即扫描
  * Phase 3：桌面悬浮小组件（置顶卡片、位置记忆、点击打开主窗口、托盘开关）
@@ -14,6 +14,8 @@ const http = require('http');
 const { spawn } = require('child_process');
 
 const isDev = !app.isPackaged;
+// 开发模式 Umi dev 端口：由 scripts/dev.js 解析 Umi 实际监听端口后注入；手动 npm run electron 时回退 8000
+const devPort = Number(process.env.UMI_DEV_PORT) || 8000;
 const scanOnStart = process.argv.includes('--scan-on-start');
 const hidden = process.argv.includes('--hidden');
 
@@ -125,7 +127,7 @@ function createWindow() {
       preload: path.join(__dirname, 'main-preload.js'),
     },
   });
-  const url = isDev ? 'http://localhost:8000' : `http://localhost:${embeddedPort}`;
+  const url = isDev ? `http://localhost:${devPort}` : `http://localhost:${embeddedPort}`;
   mainWindow.loadURL(url);
   mainWindow.webContents.on('did-finish-load', () => log.info('main', '页面加载完成', { url }));
   mainWindow.webContents.on('did-fail-load', (_e, errorCode, errorDescription, validatedURL) => {
@@ -172,7 +174,7 @@ function createSystemWidget() {
     BrowserWindow,
     Menu,
     screen,
-    url: isDev ? 'http://localhost:8000/widget' : `http://localhost:${embeddedPort}/widget`,
+    url: isDev ? `http://localhost:${devPort}/widget` : `http://localhost:${embeddedPort}/widget`,
     stateFile: WIDGET_STATE_FILE,
     showMain: showMainWindow,
     // 小组件自身（右键菜单 / Alt+F4）隐藏或显示时，同步托盘勾选状态并持久化
