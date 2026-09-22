@@ -150,7 +150,7 @@ export default function Layout() {
             className="cyber-search"
             prefix={<SearchOutlined style={{ color: 'rgba(255,255,255,0.4)' }} />}
             placeholder="搜索目录或文件"
-            style={{ maxWidth: 325, background: cyberColors.bgContainer }}
+            style={{ maxWidth: 325 }}
             allowClear
           />
           <CyberButton

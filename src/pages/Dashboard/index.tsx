@@ -85,7 +85,7 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <CyberCard style={{ textAlign: 'center', padding: '60px 0' }}>
+      <CyberCard contentStyle={{ textAlign: 'center', padding: '60px 0' }}>
         <Spin tip="读取扫描结果…" />
       </CyberCard>
     );
@@ -177,6 +177,7 @@ export default function DashboardPage() {
             sub="不含谨慎项"
             color={cyberColors.red}
             icon={<ThunderboltOutlined />}
+            glow
           />
         </Col>
       </Row>
@@ -215,7 +216,7 @@ export default function DashboardPage() {
                     一键以管理员身份重扫
                   </CyberButton>
                   {elevateRunning && <Spin size="small" />}
-                  {elevateText && <span style={{ color: 'rgba(255,255,255,0.75)' }}>{elevateText}</span>}
+                  {elevateText && <span style={{ color: cyberColors.textSecondary }}>{elevateText}</span>}
                 </div>
               </div>
             )}

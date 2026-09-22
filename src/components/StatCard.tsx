@@ -8,10 +8,12 @@ interface Props {
   sub?: string;
   color?: string;
   icon?: ReactNode;
+  /** 数值红色发光（spec §9：可安全清理预估） */
+  glow?: boolean;
 }
 
 /** 概览统计卡片（CP2077：红大写标签 + 青色数值） */
-export default function StatCard({ title, value, sub, color, icon }: Props) {
+export default function StatCard({ title, value, sub, color, icon, glow }: Props) {
   const accent = color ?? cyberColors.cyan;
   return (
     <CyberCard variant="cyan" stripe>
@@ -54,6 +56,7 @@ export default function StatCard({ title, value, sub, color, icon }: Props) {
               color: cyberColors.cyan,
               lineHeight: 1.2,
               whiteSpace: 'nowrap',
+              textShadow: glow ? '0 0 14px rgba(247, 80, 73, 0.8)' : undefined,
             }}
           >
             {value}

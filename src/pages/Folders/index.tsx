@@ -80,7 +80,7 @@ export default function FoldersPage() {
 
   if (loading) {
     return (
-      <CyberCard style={{ textAlign: 'center', padding: '60px 0' }}>
+      <CyberCard contentStyle={{ textAlign: 'center', padding: '60px 0' }}>
         <Spin tip="读取扫描结果…" />
       </CyberCard>
     );

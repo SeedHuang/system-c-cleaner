@@ -26,7 +26,6 @@ export default function BarList({ items, onItemClick }: Props) {
           onClick={() => onItemClick?.(it)}
           style={{
             cursor: onItemClick ? 'pointer' : 'default',
-            borderRadius: 8,
             padding: '2px 4px',
             transition: 'background 0.15s',
           }}

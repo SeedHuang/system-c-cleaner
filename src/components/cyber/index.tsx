@@ -15,6 +15,8 @@ interface CyberCardProps {
   onClick?: (e: MouseEvent<HTMLDivElement>) => void;
   className?: string;
   style?: CSSProperties;
+  /** 内层内容盒样式。注意：style 作用于描边层，勿在 style 上设 padding/background */
+  contentStyle?: CSSProperties;
   children?: ReactNode;
 }
 
@@ -27,6 +29,7 @@ export function CyberCard({
   onClick,
   className,
   style,
+  contentStyle,
   children,
 }: CyberCardProps) {
   const cls = [
@@ -40,7 +43,7 @@ export function CyberCard({
     .join(' ');
   return (
     <div id={id} className={cls} style={style} onClick={onClick}>
-      <div className="cyber-card-inner">{children}</div>
+      <div className="cyber-card-inner" style={contentStyle}>{children}</div>
     </div>
   );
 }
