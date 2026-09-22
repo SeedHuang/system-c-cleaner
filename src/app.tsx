@@ -1,5 +1,5 @@
-import { figmaTheme } from './setup/theme';
+import { cyberTheme } from './setup/theme';
 
 export const antd = {
-  theme: figmaTheme,
+  theme: cyberTheme,
 };

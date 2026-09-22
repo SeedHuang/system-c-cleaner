@@ -1,78 +1,84 @@
 import { theme } from 'antd';
 
-/** Figma 参考稿提取的色板：SaaS - File Management Dashboard (Dark) */
-export const figmaColors = {
-  bgLayout: '#212332',
-  bgContainer: '#2A2D3E',
-  bgElevated: '#32364A',
-  bgUpgrade: '#34384D',
-  primary: '#2697FF',
-  primaryDeep: '#377AFF',
-  primaryLight: '#46A6FF',
-  gradientEnd: '#66B6FF',
-  red: '#EE2727',
-  yellow: '#FFCF26',
-  cyan: '#26E5FF',
-  green: '#70CF12',
-  orange: '#FFA113',
-  text: '#FFFFFF',
+/** CP2077 UI Kit 提取的色板：UI Kit - CP2077 (Community) */
+export const cyberColors = {
+  bgLayout: '#0E0E17',
+  bgContainer: '#161616',
+  bgElevated: '#1A1A26',
+  red: '#F75049',
+  cyan: '#5EF6FF',
+  green: '#1DED83',
+  yellow: '#F0B537',
+  orange: '#FB932E',
+  blue: '#2570D4',
+  purple: '#9D2BF5',
+  contrast: '#D6D0D0',
   textPrimary: '#F0F0F0',
-  textSecondary: '#B5C9DB',
-  textMuted: 'rgba(255, 255, 255, 0.6)',
-  borderPrimary: 'rgba(38, 151, 255, 0.15)',
-  borderWhite: 'rgba(255, 255, 255, 0.1)',
+  textSecondary: 'rgba(255, 255, 255, 0.6)',
+  textMuted: 'rgba(255, 255, 255, 0.4)',
+  borderCyan: 'rgba(94, 246, 255, 0.3)',
+  borderRed: 'rgba(247, 80, 73, 0.5)',
+  borderWhite: 'rgba(255, 255, 255, 0.08)',
 } as const;
 
 /** 四色清理分类 */
 export const cleanupLevels = {
-  safe: { label: '可安全清理', color: figmaColors.green },
-  caution: { label: '谨慎清理', color: figmaColors.yellow },
-  keep: { label: '建议保留', color: figmaColors.primary },
-  never: { label: '绝对不要动', color: figmaColors.red },
+  safe: { label: '可安全清理', color: cyberColors.green },
+  caution: { label: '谨慎清理', color: cyberColors.yellow },
+  keep: { label: '建议保留', color: cyberColors.cyan },
+  never: { label: '绝对不要动', color: cyberColors.red },
 } as const;
 
 export type CleanupLevel = keyof typeof cleanupLevels;
 
-/** antd v5 深色主题 token（对齐 Figma） */
-export const figmaTheme = {
+/** antd v5 深色主题 token（对齐 CP2077 UI Kit） */
+export const cyberTheme = {
   algorithm: theme.darkAlgorithm,
   token: {
-    colorPrimary: figmaColors.primary,
-    colorInfo: figmaColors.primary,
-    colorLink: figmaColors.primary,
-    colorBgLayout: figmaColors.bgLayout,
-    colorBgContainer: figmaColors.bgContainer,
-    colorBgElevated: figmaColors.bgElevated,
-    colorBorder: figmaColors.borderPrimary,
-    colorBorderSecondary: figmaColors.borderWhite,
-    colorText: figmaColors.textPrimary,
-    colorTextSecondary: figmaColors.textSecondary,
-    colorTextTertiary: figmaColors.textMuted,
-    borderRadius: 10,
+    colorPrimary: cyberColors.red,
+    colorInfo: cyberColors.cyan,
+    colorLink: cyberColors.cyan,
+    colorBgLayout: cyberColors.bgLayout,
+    colorBgContainer: cyberColors.bgContainer,
+    colorBgElevated: cyberColors.bgElevated,
+    colorBorder: cyberColors.borderWhite,
+    colorBorderSecondary: cyberColors.borderWhite,
+    colorText: cyberColors.textPrimary,
+    colorTextSecondary: cyberColors.textSecondary,
+    colorTextTertiary: cyberColors.textMuted,
+    borderRadius: 0,
     fontSize: 14,
     fontFamily:
-      "'Poppins', -apple-system, 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', sans-serif",
-    controlHeight: 38,
+      "'Rajdhani', -apple-system, 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', sans-serif",
+    controlHeight: 36,
   },
   components: {
     Layout: {
-      siderBg: figmaColors.bgContainer,
-      headerBg: figmaColors.bgLayout,
-      bodyBg: figmaColors.bgLayout,
+      siderBg: cyberColors.bgLayout,
+      headerBg: cyberColors.bgLayout,
+      bodyBg: cyberColors.bgLayout,
     },
     Menu: {
       darkItemBg: 'transparent',
-      darkItemSelectedBg: figmaColors.primary,
-      darkItemColor: figmaColors.textMuted,
-      darkItemHoverColor: figmaColors.textPrimary,
-      itemBorderRadius: 10,
+      darkItemSelectedBg: cyberColors.red,
+      darkItemColor: cyberColors.textSecondary,
+      darkItemHoverColor: cyberColors.textPrimary,
+      itemBorderRadius: 0,
     },
     Table: {
-      headerBg: figmaColors.bgElevated,
-      rowHoverBg: 'rgba(38, 151, 255, 0.06)',
+      headerBg: cyberColors.bgElevated,
+      headerBorderRadius: 0,
+      rowHoverBg: 'rgba(247, 80, 73, 0.08)',
     },
     Button: {
       primaryShadow: 'none',
     },
+    Modal: {
+      contentBg: cyberColors.bgContainer,
+      headerBg: cyberColors.bgContainer,
+    },
   },
 };
+
+/** @deprecated 临时兼容别名，Task 7 移除。新代码一律用 cyberColors */
+export const figmaColors = cyberColors;
