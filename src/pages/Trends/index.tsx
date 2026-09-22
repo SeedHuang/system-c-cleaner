@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Breadcrumb, Button, Card, Col, DatePicker, Empty, InputNumber, Row, Segmented, Spin, Table, Tag } from 'antd';
+import { Alert, Breadcrumb, Button, Col, DatePicker, Empty, InputNumber, Row, Segmented, Spin, Table, Tag } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 import type { Dayjs } from 'dayjs';
@@ -8,7 +8,8 @@ import PathLink from '@/components/PathLink';
 import TrendChart from '@/components/TrendChart';
 import type { GrowthDirEntry, GrowthDirResult, GrowthTopResult, GrowthTier } from '@/services/growth';
 import { getGrowth, getGrowthDir, getGrowthTrend } from '@/services/growth';
-import { figmaColors } from '@/setup/theme';
+import { cyberColors } from '@/setup/theme';
+import { CyberCard, SectionTitle } from '@/components/cyber';
 import { formatSize } from '@/utils/format';
 import { parentOf } from '@/utils/path';
 
@@ -24,10 +25,10 @@ const WINDOW_OPTIONS = [
 ];
 
 const tierColor: Record<GrowthTier, string> = {
-  extreme: figmaColors.red,
-  high: figmaColors.orange,
-  medium: figmaColors.yellow,
-  low: figmaColors.green,
+  extreme: cyberColors.red,
+  high: cyberColors.orange,
+  medium: cyberColors.yellow,
+  low: cyberColors.green,
 };
 const tierLabel: Record<GrowthTier, string> = {
   extreme: '极高',
@@ -130,7 +131,7 @@ export default function TrendsPage() {
       width: 110,
       align: 'right',
       render: (v: number) => (
-        <span style={{ color: v >= 0 ? figmaColors.green : figmaColors.red, fontWeight: 600 }}>
+        <span style={{ color: v >= 0 ? cyberColors.green : cyberColors.red, fontWeight: 600 }}>
           {v >= 0 ? '+' : ''}{formatSize(v)}
         </span>
       ),
@@ -171,7 +172,8 @@ export default function TrendsPage() {
 
   return (
     <div>
-      <Card title="增长趋势" bordered={false} style={{ marginBottom: 20 }}>
+      <CyberCard style={{ marginBottom: 20 }}>
+        <SectionTitle style={{ marginBottom: 16 }}>增长趋势</SectionTitle>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center' }}>
           <Segmented
             options={WINDOW_OPTIONS}
@@ -208,12 +210,12 @@ export default function TrendsPage() {
             {range ? '按所选时间区间查看' : '按预设窗口查看'}
           </span>
         </div>
-      </Card>
+      </CyberCard>
 
       {topData?.insufficient && (
-        <Card bordered={false}>
+        <CyberCard>
           <Empty description="历史数据不足（至少需要 2 次扫描）——每次点击「重新扫描」都会自动记录一次快照，积累后即可分析增长趋势。" />
-        </Card>
+        </CyberCard>
       )}
 
       {!topData?.insufficient && (topData?.unscannedDirs ?? 0) > 0 && (
@@ -226,12 +228,12 @@ export default function TrendsPage() {
       )}
 
       {!drillPath ? (
-        <Card
-          title={`增长排行 Top 20${
-            rangeText ? `（区间 ${rangeText}）` : topData?.compareAt ? `（对比 ${topData.compareAt}）` : ''
-          }`}
-          bordered={false}
-        >
+        <CyberCard>
+          <SectionTitle style={{ marginBottom: 16 }}>
+            {`增长排行 Top 20${
+              rangeText ? `（区间 ${rangeText}）` : topData?.compareAt ? `（对比 ${topData.compareAt}）` : ''
+            }`}
+          </SectionTitle>
           {loadingTop ? (
             <div style={{ textAlign: 'center', padding: 40 }}>
               <Spin />
@@ -253,12 +255,12 @@ export default function TrendsPage() {
                       alignItems: 'center',
                       gap: 8,
                       padding: '8px 4px',
-                      borderBottom: `1px solid ${figmaColors.borderWhite}`,
+                      borderBottom: `1px solid ${cyberColors.borderWhite}`,
                       cursor: 'pointer',
                     }}
                   >
                     <span style={{ width: 14 * depth, flexShrink: 0 }} />
-                    <span style={{ width: 24, flexShrink: 0, color: figmaColors.primary }}>
+                    <span style={{ width: 24, flexShrink: 0, color: cyberColors.cyan }}>
                       <FolderOutlined />
                     </span>
                     <span style={{ flex: 1, overflow: 'hidden' }}>
@@ -289,7 +291,7 @@ export default function TrendsPage() {
                     <span style={{ width: 90, textAlign: 'right', color: 'rgba(255,255,255,0.6)' }}>
                       {e.size == null ? '未扫描' : formatSize(e.size)}
                     </span>
-                    <span style={{ width: 90, textAlign: 'right', fontWeight: 600, color: e.growth >= 0 ? figmaColors.green : figmaColors.red }}>
+                    <span style={{ width: 90, textAlign: 'right', fontWeight: 600, color: e.growth >= 0 ? cyberColors.green : cyberColors.red }}>
                       {e.growth >= 0 ? '+' : ''}{formatSize(e.growth)}
                     </span>
                     <span style={{ width: 56, textAlign: 'center', color: tierColor[e.tier] }}>{tierLabel[e.tier]}</span>
@@ -301,10 +303,10 @@ export default function TrendsPage() {
               })}
             </div>
           )}
-        </Card>
+        </CyberCard>
       ) : (
         <div>
-          <Card bordered={false} style={{ marginBottom: 20 }}>
+          <CyberCard style={{ marginBottom: 20 }}>
             <Breadcrumb
               items={crumbs.map((_, i) => {
                 const p = crumbs.slice(0, i + 1).join('\\');
@@ -313,13 +315,12 @@ export default function TrendsPage() {
                 };
               })}
             />
-          </Card>
+          </CyberCard>
           <Row gutter={20}>
             <Col span={16}>
-              <Card
-                bordered={false}
-                title={
-                  // 整段「图标 + 标题文字」都触发打开当前目录（hover 时整段变蓝色下划线）
+              <CyberCard>
+                <div style={{ marginBottom: 16 }}>
+                  {/* 整段「图标 + 标题文字」都触发打开当前目录 */}
                   <PathLink
                     path={drillPath}
                     leadingIcon
@@ -328,8 +329,7 @@ export default function TrendsPage() {
                   >
                     {`${drillPath} 子目录增长（${rangeText ?? windowLabel}）`}
                   </PathLink>
-                }
-              >
+                </div>
                 {loadingDir ? (
                   <div style={{ textAlign: 'center', padding: 40 }}>
                     <Spin />
@@ -351,12 +351,11 @@ export default function TrendsPage() {
                     })}
                   />
                 )}
-              </Card>
+              </CyberCard>
             </Col>
             <Col span={8}>
-              <Card
-                bordered={false}
-                title={
+              <CyberCard>
+                <div style={{ marginBottom: 16 }}>
                   <PathLink
                     path={drillPath}
                     leadingIcon
@@ -365,14 +364,13 @@ export default function TrendsPage() {
                   >
                     {`${drillPath} 历史大小趋势`}
                   </PathLink>
-                }
-              >
+                </div>
                 {trend.length >= 2 ? (
                   <TrendChart points={trend} />
                 ) : (
                   <Empty description="历史数据不足，暂无趋势" image={Empty.PRESENTED_IMAGE_SIMPLE} />
                 )}
-              </Card>
+              </CyberCard>
             </Col>
           </Row>
           <Button style={{ marginTop: 16 }} onClick={() => setDrillPath(null)}>

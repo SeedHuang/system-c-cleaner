@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react';
 import { useModel } from '@umijs/max';
-import { Button, Card, Empty, Input, Spin, Table, Tag } from 'antd';
+import { Empty, Input, Spin, Table, Tag } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { SearchOutlined } from '@ant-design/icons';
 import PathLink from '@/components/PathLink';
+import { CyberButton, CyberCard, SectionTitle } from '@/components/cyber';
 import type { ScanItem } from '@/services/scan';
 import { cleanupLevels } from '@/setup/theme';
 import { formatGB } from '@/utils/format';
@@ -79,29 +80,28 @@ export default function FoldersPage() {
 
   if (loading) {
     return (
-      <Card bordered={false} style={{ textAlign: 'center', padding: '60px 0' }}>
+      <CyberCard style={{ textAlign: 'center', padding: '60px 0' }}>
         <Spin tip="读取扫描结果…" />
-      </Card>
+      </CyberCard>
     );
   }
 
   if (!data) {
     return (
-      <Card bordered={false} style={{ marginTop: 60 }}>
+      <CyberCard style={{ marginTop: 60 }}>
         <Empty description="还没有扫描数据，请先执行扫描">
-          <Button type="primary" loading={scanning} onClick={startScan}>
+          <CyberButton variant="red" loading={scanning} onClick={startScan}>
             开始扫描
-          </Button>
+          </CyberButton>
         </Empty>
-      </Card>
+      </CyberCard>
     );
   }
 
   return (
-    <Card
-      title="目录排行"
-      bordered={false}
-      extra={
+    <CyberCard>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+        <SectionTitle>目录排行</SectionTitle>
         <Input
           prefix={<SearchOutlined style={{ color: 'rgba(255,255,255,0.4)' }} />}
           placeholder="搜索名称或路径"
@@ -110,14 +110,13 @@ export default function FoldersPage() {
           style={{ width: 240 }}
           onChange={(e) => setKeyword(e.target.value)}
         />
-      }
-    >
+      </div>
       <Table<ScanItem>
         rowKey="id"
         columns={columns}
         dataSource={filtered}
         pagination={{ pageSize: 12, showTotal: (t) => `共 ${t} 项` }}
       />
-    </Card>
+    </CyberCard>
   );
 }
