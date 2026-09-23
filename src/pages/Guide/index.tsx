@@ -58,7 +58,7 @@ export default function GuidePage() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       {guides.map((g) => (
         <CyberCard key={g.title}>
-          <SectionTitle style={{ marginBottom: 12 }}>{g.title}</SectionTitle>
+          <SectionTitle glow style={{ marginBottom: 12 }}>{g.title}</SectionTitle>
           <ol style={{ margin: 0, paddingLeft: 20, display: 'flex', flexDirection: 'column', gap: 8 }}>
             {g.steps.map((s, i) => (
               <li key={i} style={{ fontSize: 13, color: cyberColors.textSecondary, lineHeight: 1.7 }}>

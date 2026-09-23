@@ -3,7 +3,7 @@ import { useModel } from '@umijs/max';
 import { Empty, message, Spin, Tag } from 'antd';
 import { FolderOpenOutlined } from '@ant-design/icons';
 import type { ScanItem } from '@/services/scan';
-import { cleanupLevels, cyberColors } from '@/setup/theme';
+import { cleanupLevels, cyberColors, cyberFontStack } from '@/setup/theme';
 import { CyberButton, CyberCard, SectionTitle } from '@/components/cyber';
 import { formatGB } from '@/utils/format';
 import { openInExplorer } from '@/utils/shell';
@@ -76,11 +76,11 @@ export default function CleanupPage() {
               <SectionTitle style={{ fontSize: 16, color: cyberColors.red }}>{level.label}</SectionTitle>
               <Tag
                 style={{
-                  background: 'rgba(94,246,255,0.1)',
+                  background: cyberColors.cyanSoft,
                   color: cyberColors.cyan,
                   border: `1px solid ${cyberColors.borderCyan}`,
                   borderRadius: 0,
-                  fontFamily: "'Rajdhani', sans-serif",
+                  fontFamily: cyberFontStack,
                   fontWeight: 600,
                 }}
               >
@@ -100,7 +100,7 @@ export default function CleanupPage() {
                     style={{
                       background: cyberColors.bgLayout,
                       padding: 14,
-                      borderTop: `1px solid rgba(247,80,73,0.5)`,
+                      borderTop: `1px solid ${cyberColors.borderRed}`,
                     }}
                   >
                     <div
@@ -115,7 +115,7 @@ export default function CleanupPage() {
                         style={{
                           fontSize: 14,
                           fontWeight: 600,
-                          fontFamily: "'Rajdhani', sans-serif",
+                          fontFamily: cyberFontStack,
                           color: cyberColors.textPrimary,
                         }}
                       >
@@ -125,7 +125,7 @@ export default function CleanupPage() {
                         style={{
                           fontSize: 15,
                           fontWeight: 700,
-                          fontFamily: "'Rajdhani', sans-serif",
+                          fontFamily: cyberFontStack,
                           color: it.status === 'unscanned' ? cyberColors.textMuted : cyberColors.cyan,
                           whiteSpace: 'nowrap',
                         }}

@@ -1,0 +1,235 @@
+Review complete: 22 finding(s) across 24 selected item(s).
+
+─── src/components/StatCard.tsx:56-59 ───
+[bug · medium] The `glow` prop only adds a red `textShadow`, while the value glyphs stay cyan
+(`cyberColors.cyan`). Per the prop's own comment ("数值红色发光") and the reference implementation in
+`cyber.less` (`.cyber-title-glow { color: #f75049; text-shadow: ... }`), the intended effect is red
+text *with* a red halo. A red halo behind cyan digits renders as a muddy blur rather than a glow.
+The only caller (Dashboard) passes `color={cyberColors.red}` together with `glow`, which confirms
+the intent is a red value. Suggest switching the value color when `glow` is set (or using a
+cyan-toned shadow if cyan must stay).
+
+-               color: cyberColors.cyan,
++               color: glow ? cyberColors.red : cyberColors.cyan,
+                lineHeight: 1.2,
+                whiteSpace: 'nowrap',
+                textShadow: glow ? '0 0 14px rgba(247, 80, 73, 0.8)' : undefined,
+
+
+─── src/components/BarList.tsx:33-33 ───
+[maintainability · low] The red hover literal `rgba(247,80,73,0.08)` is now duplicated here, in
+`StorageDonut.tsx`, and in `cyberColors`/`rowHoverBg` (theme.tsx), plus the red `rgba(247, 80, 73,
+...)` values in `cyber.less`/`global.less`. Any future red-token adjustment must be made in many
+places and will drift. Consider exposing a single token (e.g. `cyberColors.hoverRed`) in
+`cyberColors` and referencing it from both components.
+
+
+
+─── src/pages/History/index.tsx:201-201 ───
+[bug · medium] Cascading filters are not reset when a parent changes. Selecting year/month/day then
+switching (or clearing) a parent leaves the child states stale: the `months`/`days`/`hours` option
+lists are recomputed but the Selects keep values that no longer exist in them. Worse, clearing the
+year (`allowClear`) keeps `month`/`day` set, so `filtered` silently widens to that month/day across
+*all* years and 「删除筛选结果」 will delete a broader set than the user expects. Reset the dependent levels
+whenever a parent changes.
+
+-           onChange={setYear}
++           onChange={(v) => { setYear(v); setMonth(undefined); setDay(undefined); setHour(undefined); }}
+
+
+─── src/pages/History/index.tsx:210-210 ───
+[bug · medium] `month` must clear `day`/`hour` for the same reason as the year change above;
+otherwise a stale day/hour keeps narrowing (and deleting) against a month the user has just
+switched.
+
+-           onChange={setMonth}
++           onChange={(v) => { setMonth(v); setDay(undefined); setHour(undefined); }}
+
+
+─── src/pages/History/index.tsx:219-219 ───
+[bug · medium] `day` must clear `hour` for the same reason; leaving a stale hour makes `filtered`
+depend on a value the recomputed `hours` list may no longer contain.
+
+-           onChange={setDay}
++           onChange={(v) => { setDay(v); setHour(undefined); }}
+
+
+─── src/pages/History/index.tsx:73-73 ───
+[maintainability · low] The same year/month/day/hour comparison predicate (and
+`parseT(s.scannedAt)`) is inlined four times across the `months`/`days`/`hours` memos and
+`filtered`, parsing each item's timestamp repeatedly per level. Extracting a single `matches(t,
+year, month, day, hour)` helper (or pre-parsing timestamps once) removes the duplication and the
+repeated parsing.
+
+
+
+─── src/pages/Cleanup/index.tsx:103-103 ───
+[maintainability · low] This hardcoded color duplicates the existing `cyberColors.borderRed` token
+(`rgba(247, 80, 73, 0.5)`) defined in `src/setup/theme.tsx`. Using the token keeps the palette in
+one place; the template literal also has no interpolation, so plain quotes would do.
+
+-                       borderTop: `1px solid rgba(247,80,73,0.5)`,
++                       borderTop: `1px solid ${cyberColors.borderRed}`,
+
+
+─── src/pages/Dashboard/index.tsx:202-203 ───
+[maintainability · low] These two literals bypass the palette while the sibling `color` on line 204
+does use `cyberColors.yellow`, so the warning box and its accent can drift apart. Deriving them from
+the token keeps them in sync.
+
+-                   background: 'rgba(240,181,55,0.08)',
+-                   border: `1px solid rgba(240,181,55,0.5)`,
++                   background: `${cyberColors.yellow}14`,
++                   border: `1px solid ${cyberColors.yellow}80`,
+
+
+─── src/pages/LargeFiles/index.tsx:28-28 ───
+[maintainability · low] The inline font stack `"'Rajdhani', sans-serif"` is repeated verbatim across
+pages/components (Cleanup Tag + item name/size, StatCard, StorageDonut, BarList, layouts, here).
+Extracting it into a shared constant (e.g. `cyberFontStack` in `@/setup/theme`) avoids future font
+changes requiring edits at every call site.
+
+
+
+─── src/pages/History/index.tsx:31-32 ───
+[bug · medium] `load` swallows the error and only resets state, so an API failure renders exactly
+like a genuine empty history (header shows “共 0 个快照，占用 0 B” with no hint of the failure). Since the
+rest of the page already surfaces feedback via `msg`, report the failure here so users don't mistake
+a load error for “no snapshots”.
+
+-     } catch {
++     } catch (e) {
++       setMsg(`加载历史快照失败：${e instanceof Error ? e.message : '未知错误'}`);
+        setSnapshots([]);
+
+
+─── src/pages/History/index.tsx:183-183 ───
+[maintainability · low] The secondary text color is hardcoded as `rgba(255,255,255,0.6)` here (and
+`0.7` on the message span below). The theme already exposes `cyberColors.textSecondary`/`textMuted`;
+reusing the token keeps these in sync with `theme.tsx` and avoids magic colors drifting from the
+palette.
+
+-           <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)' }}>
++           <span style={{ fontSize: 13, color: cyberColors.textSecondary }}>
+
+
+─── package.json:18-18 ───
+[maintainability · low] `concurrently` is no longer referenced by any script (its only remaining
+mention is the explanatory comment in scripts/dev.js), yet it is still declared in `devDependencies`
+(line 30). Removing the sole consumer without dropping the dependency leaves a dead dev dependency
+(and duplicate process-supervision logic in the lockfile). Drop it together with this change, e.g.
+`npm uninstall concurrently` so package.json / package-lock.json stay in sync.
+
+
+
+─── scripts/dev.js:51-54 ───
+[bug · low] `electronPids` entries are never removed once the Electron child exits, so the same PID
+is killed twice: once here and again by the `process.on('exit')` handler below (each call shells out
+to `taskkill /pid <pid> /T /F`). On Windows a PID can be recycled after the process is gone, so the
+second, redundant kill can, in a narrow window, target an unrelated process. Clearing the array
+after the kill makes the `exit` handler a true safety net instead of a duplicate.
+
+    exiting = true;
+    electronPids.forEach(killTree);
++   electronPids.length = 0; // 已杀，清空以免 process.on('exit') 对同一 PID 二次 kill
+    killTree(umi && umi.pid);
+    process.exit(code);
+
+
+─── scripts/dev.js:42-42 ───
+[bug · low] Both children are spawned with `shell: true`, so on POSIX the tracked PID is only the
+`/bin/sh` wrapper and the real work happens in grandchildren (`npx` → `max`/`electron` → `node`). A
+plain `SIGTERM` to that PID therefore does not tear down the tree and can leave the Umi dev server
+holding the port after the session ends (only the Windows branch uses `taskkill /T`). Either kill
+the process group (spawn with `detached: true` and `process.kill(-pid, 'SIGTERM')`) or explicitly
+document that tree cleanup is Windows-only.
+
+
+
+─── src/layouts/index.tsx:166-166 ───
+[maintainability · medium] This `CyberCard` relies on `.cyber-card-inner`'s default `padding: 20px`
+(the inner flex `<div style={{... padding: 0}}>` does not override it — `padding` is not inherited),
+while the previous markup used `padding: '6px 14px'`. The card grows to ~76px inside the 88px
+header, changing the top-bar proportions versus the other compact usages. If the compact size was
+intended, pass `contentStyle={{ padding: '6px 14px' }}` (as other cards do with `contentStyle`).
+
+The card's inner colors are also hardcoded (`rgba(94,246,255,0.1)`, `rgba(247,80,73,0.15)`,
+`'#fff'`) even though `cyberColors` is already imported in this file; using the palette (e.g.
+`cyberColors.borderCyan`) avoids drift from the theme.
+
+
+
+─── src/global.less:33-33 ───
+[maintainability · low] `@cyberClip` is declared here with exactly the same value as in
+`src/components/cyber/cyber.less` (the design spec calls it a "统一常量"). Less variables are
+file-scoped, so the two copies are silently independent and will diverge on the next geometry tweak
+(sider/menu cut corners vs. Cyber primitives). Define it once (e.g. a shared `variables.less`
+imported by both files) and reference that single definition.
+
+
+
+─── src/components/cyber/index.tsx:14-14 ───
+[maintainability · low] These optional variants are declared but never consumed: no caller passes
+`scan` (CyberCard) or `glow` (SectionTitle), and CyberCard's `onClick` is never passed either. Since
+only `variant`, `stripe`, `id`, `style` and `contentStyle` are exercised, consider wiring up the
+intended usages or dropping the options so the styling doesn't rot untested.
+
+
+
+─── src/pages/Trends/index.tsx:233-235 ───
+[maintainability · low] This newly added JSX (moved out of the old `Card title`) keeps a nested
+ternary (`rangeText ? … : topData?.compareAt ? … : ''`), which violates the project rule that nested
+ternaries are not allowed and is hard to read. Suggest computing the suffix before the return, e.g.
+`let rankSuffix = ''; if (rangeText) rankSuffix = `（区间 ${rangeText}）`; else if (topData?.compareAt)
+rankSuffix = `（对比 ${topData.compareAt}）`;` and rendering `` `增长排行 Top 20${rankSuffix}` ``.
+
+
+
+─── src/pages/Cleanup/index.tsx:79-79 ───
+[maintainability · low] This background is a hand-written 10% alpha of `cyberColors.cyan`, while the
+`color`/`border` in the same style object use tokens – so a future palette change would leave this
+tag background drifting. Consider adding a light cyan surface token to `cyberColors` (e.g.
+`cyanSoft: 'rgba(94, 246, 255, 0.1)'`) and referencing it here, consistent with
+`cyberColors.borderCyan` used on the line below.
+
+
+
+─── scripts/dev.js:91-96 ───
+[maintainability · low] This 30s cap is conceptually different from the 60s PORT_TIMEOUT_MS guard
+above it: at this point the port has been parsed successfully, so a timeout only means the first
+webpack compile is still running. webpack-dev-middleware defers `GET /` for the whole duration of
+the initial (cold) build, and a first build of this Max + antd app without an MFSU cache can
+reasonably take longer than 30s. In that case the whole session (Umi + Electron) is torn down with
+"端口 <port> 在 30s 内未就绪，退出", even though nothing is broken — and the developer has to start over.
+Consider making the readiness window longer/configurable (e.g. an env var) or, once the port is
+known, downgrading this to a periodic "still compiling…" log and keep polling instead of exiting.
+
+
+
+─── src/setup/theme.tsx:38-39 ───
+[maintainability · medium] The new palette is wired into `colorPrimary`/`colorInfo`/`colorLink`, but
+antd's semantic feedback tokens are left at their defaults, so the app now shows two different
+reds/yellows for the same meaning: the layout error banner uses `cyberColors.red` (#F75049) while
+`message.error()` (Cleanup line 158) / form validation still render antd's #ff4d4f, and the
+Dashboard permission warning (#F0B537) differs from `message.warning()`'s #faad14 (PathLink line 47,
+History lines 100/104). Consider mapping the semantic tokens so the CP2077 palette is used
+consistently by antd's own feedback UI.
+
+      colorPrimary: cyberColors.red,
+      colorInfo: cyberColors.cyan,
++     colorSuccess: cyberColors.green,
++     colorWarning: cyberColors.yellow,
++     colorError: cyberColors.red,
+
+
+─── src/components/cyber/index.tsx:51-51 ───
+[maintainability · low] `CyberButtonProps` still exposes antd's `size` and `shape` (only `variant`
+is omitted), but `cyber.less` pins `height: 36px !important`, `padding: 0 18px !important` and
+`border-radius: 0 !important`, so those props are silently no-ops — e.g. `<CyberButton size="small"
+/>` renders 36px tall and `shape="round"/"circle"` stays square. Either narrow the prop type (as
+suggested) so the type surface matches the rendered result, or drive the chamfered metrics from the
+props.
+
+- interface CyberButtonProps extends Omit<ButtonProps, 'variant'> {
++ interface CyberButtonProps extends Omit<ButtonProps, 'variant' | 'size' | 'shape'> {
+

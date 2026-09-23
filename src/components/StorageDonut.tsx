@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { cyberColors } from '@/setup/theme';
+import { cyberColors, cyberFontStack } from '@/setup/theme';
 
 export interface DonutSegment {
   label: string;
@@ -90,7 +90,7 @@ export default function StorageDonut({
             style={{
               fontSize: 34,
               fontWeight: 700,
-              fontFamily: "'Rajdhani', sans-serif",
+              fontFamily: cyberFontStack,
               color: cyberColors.cyan,
               lineHeight: 1.1,
             }}
@@ -126,7 +126,7 @@ export default function StorageDonut({
               transition: 'background 0.15s',
             }}
             onMouseEnter={(e) => {
-              if (onSegmentClick) e.currentTarget.style.background = 'rgba(247,80,73,0.08)';
+              if (onSegmentClick) e.currentTarget.style.background = cyberColors.hoverRed;
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.background = 'transparent';
@@ -148,7 +148,7 @@ export default function StorageDonut({
               style={{
                 fontSize: 12,
                 fontWeight: 600,
-                fontFamily: "'Rajdhani', sans-serif",
+                fontFamily: cyberFontStack,
                 color: cyberColors.cyan,
               }}
             >

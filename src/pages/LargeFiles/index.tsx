@@ -3,7 +3,7 @@ import { Empty, Spin, Table } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import PathLink from '@/components/PathLink';
 import { CyberButton, CyberCard, SectionTitle } from '@/components/cyber';
-import { cyberColors } from '@/setup/theme';
+import { cyberColors, cyberFontStack } from '@/setup/theme';
 import type { LargeFile } from '@/services/scan';
 import { formatGB } from '@/utils/format';
 
@@ -25,7 +25,7 @@ const columns: ColumnsType<LargeFile> = [
     sorter: (a, b) => a.sizeGB - b.sizeGB,
     defaultSortOrder: 'descend',
     render: (v: number) => (
-      <span style={{ fontFamily: "'Rajdhani', sans-serif", fontWeight: 600, color: cyberColors.cyan }}>
+      <span style={{ fontFamily: cyberFontStack, fontWeight: 600, color: cyberColors.cyan }}>
         {formatGB(v)}
       </span>
     ),

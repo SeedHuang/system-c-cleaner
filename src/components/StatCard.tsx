@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { cyberColors } from '@/setup/theme';
+import { cyberColors, cyberFontStack } from '@/setup/theme';
 import { CyberCard } from '@/components/cyber';
 
 interface Props {
@@ -12,7 +12,7 @@ interface Props {
   glow?: boolean;
 }
 
-/** 概览统计卡片（CP2077：红大写标签 + 青色数值） */
+/** 概览统计卡片（CP2077：红大写标签 + 数值；glow 时数值转红 + 红色光晕） */
 export default function StatCard({ title, value, sub, color, icon, glow }: Props) {
   const accent = color ?? cyberColors.cyan;
   return (
@@ -52,8 +52,8 @@ export default function StatCard({ title, value, sub, color, icon, glow }: Props
             style={{
               fontSize: 24,
               fontWeight: 700,
-              fontFamily: "'Rajdhani', sans-serif",
-              color: cyberColors.cyan,
+              fontFamily: cyberFontStack,
+              color: glow ? cyberColors.red : cyberColors.cyan,
               lineHeight: 1.2,
               whiteSpace: 'nowrap',
               textShadow: glow ? '0 0 14px rgba(247, 80, 73, 0.8)' : undefined,

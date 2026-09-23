@@ -1,4 +1,4 @@
-@cyberClip: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+@import './variables.less';
 
 /* ---------- CyberCard ---------- */
 .cyber-card {
@@ -25,16 +25,6 @@
   bottom: 0;
   width: 5px;
   background: rgba(94, 246, 255, 0.3);
-}
-.cyber-card-scan .cyber-card-inner::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: repeating-linear-gradient(
-    transparent 0 3px,
-    rgba(255, 255, 255, 0.02) 3px 4px
-  );
 }
 
 /* ---------- CyberButton ---------- */

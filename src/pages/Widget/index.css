@@ -10,7 +10,9 @@ body,
 
 /* 外层 = 青色 30% 描边层（1px padding 撑出描边）；窗口透明，切角处真实镂空 */
 .widget-card {
-  -webkit-app-region: drag; /* 整卡可拖拽移动 */
+  /* 拖拽改用 pointerdown/move/up 手写实现（DRG 区域会吞掉 click/dblclick 等指针事件，
+     导致无法实现「双击打开主界面」；手写拖拽 + 3px 死区即可兼容两者） */
+  touch-action: none; /* 触摸设备上阻止浏览器接管手势导致 pointercancel 中断拖拽 */
   position: relative;
   z-index: 0;
   clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);

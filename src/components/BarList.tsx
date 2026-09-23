@@ -1,5 +1,5 @@
 import { formatGB } from '@/utils/format';
-import { cyberColors } from '@/setup/theme';
+import { cyberColors, cyberFontStack } from '@/setup/theme';
 
 export interface BarItem {
   name: string;
@@ -30,7 +30,7 @@ export default function BarList({ items, onItemClick }: Props) {
             transition: 'background 0.15s',
           }}
           onMouseEnter={(e) => {
-            if (onItemClick) e.currentTarget.style.background = 'rgba(247,80,73,0.08)';
+            if (onItemClick) e.currentTarget.style.background = cyberColors.hoverRed;
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.background = 'transparent';
@@ -49,7 +49,7 @@ export default function BarList({ items, onItemClick }: Props) {
               style={{
                 fontSize: 14,
                 fontWeight: 600,
-                fontFamily: "'Rajdhani', sans-serif",
+                fontFamily: cyberFontStack,
                 color: cyberColors.cyan,
               }}
             >

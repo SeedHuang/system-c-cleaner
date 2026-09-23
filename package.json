@@ -12,7 +12,7 @@
     "setup": "max setup",
     "tsc": "tsc --noEmit",
     "server": "node server/index.js",
-    "test": "node --test \"server/tests/*.test.js\" \"electron/*.test.js\"",
+    "test": "node --test \"server/tests/*.test.js\" \"electron/*.test.js\" \"scripts/*.test.js\"",
     "migrate": "node scripts/migrate-data.js",
     "electron": "electron .",
     "electron:dev": "node scripts/dev.js",
@@ -20,14 +20,12 @@
     "electron:build-run": "scripts\\build-run.bat",
     "electron:release": "scripts\\build-release.bat"
   },
-  "dependencies": {},
   "devDependencies": {
     "@ant-design/icons": "^5.5.1",
     "@types/react": "^18.3.5",
     "@types/react-dom": "^18.3.0",
     "@umijs/max": "^4.3.29",
     "antd": "^5.21.6",
-    "concurrently": "^9.1.0",
     "dayjs": "^1.11.23",
     "electron": "^44.0.0",
     "electron-builder": "^26.0.0",

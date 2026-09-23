@@ -1,6 +1,6 @@
 import { Button } from 'antd';
 import type { ButtonProps } from 'antd';
-import type { CSSProperties, MouseEvent, ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import './cyber.less';
 
 interface CyberCardProps {
@@ -10,9 +10,6 @@ interface CyberCardProps {
   id?: string;
   /** 左侧竖条（对应 Figma Card/Frame-M） */
   stripe?: boolean;
-  /** 扫描线纹理覆盖 */
-  scan?: boolean;
-  onClick?: (e: MouseEvent<HTMLDivElement>) => void;
   className?: string;
   style?: CSSProperties;
   /** 内层内容盒样式。注意：style 作用于描边层，勿在 style 上设 padding/background */
@@ -25,8 +22,6 @@ export function CyberCard({
   variant = 'cyan',
   id,
   stripe,
-  scan,
-  onClick,
   className,
   style,
   contentStyle,
@@ -36,19 +31,19 @@ export function CyberCard({
     'cyber-card',
     `cyber-card-${variant}`,
     stripe ? 'cyber-card-stripe' : '',
-    scan ? 'cyber-card-scan' : '',
     className ?? '',
   ]
     .filter(Boolean)
     .join(' ');
   return (
-    <div id={id} className={cls} style={style} onClick={onClick}>
+    <div id={id} className={cls} style={style}>
       <div className="cyber-card-inner" style={contentStyle}>{children}</div>
     </div>
   );
 }
 
-interface CyberButtonProps extends Omit<ButtonProps, 'variant'> {
+/** size/shape 已被 cyber.less 钉死（36px 高、方角、固定内边距），一并 Omit 防止无声 no-op */
+interface CyberButtonProps extends Omit<ButtonProps, 'variant' | 'size' | 'shape'> {
   variant?: 'cyan' | 'red';
 }
 

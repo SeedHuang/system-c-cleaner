@@ -55,6 +55,10 @@ let mainWindow = null;
 let embeddedPort = null;
 let isQuitting = false;
 let scheduler = null;
+// 方案 A：自启用计划任务（schtasks），状态是异步查询的 → 托盘菜单读这个缓存
+let autostart = null;
+let autostartEnabled = false;
+let autostartToggling = false; // 防连点：切换进行中忽略后续点击，避免并发 create/delete
 
 // Phase 3：小组件
 let widgetVisible = true;
@@ -191,18 +195,22 @@ function createSystemWidget() {
 
 function createSystemTray() {
   const icon = nativeImage.createFromPath(path.join(__dirname, 'assets', 'tray.png'));
-  const autostart = createAutostart({ app, log });
   const tray = createTray({
     Tray,
     Menu,
     icon,
-    getMenuState: () => ({ autostart: autostart.isEnabled(), widgetVisible, autoScan: loadCfg().autoScan }),
+    getMenuState: () => ({ autostart: autostartEnabled, widgetVisible, autoScan: loadCfg().autoScan }),
     onShow: showMainWindow,
     onScan: triggerScan,
     onToggleAutostart: () => {
-      const next = !autostart.isEnabled();
-      autostart.setEnabled(next);
-      log.info('tray', '切换开机自启', { enabled: next });
+      if (autostartToggling) return; // 切换进行中忽略连点（否则两次点击并发 create/delete，最后一次意图可能丢失）
+      autostartToggling = true;
+      const next = !autostartEnabled;
+      autostart.setEnabled(next).then((ok) => {
+        if (ok) autostartEnabled = next; // 只有确实生效才更新缓存，托盘下次重建菜单时呈现
+        log.info('tray', '切换开机自启完成', { enabled: next, ok });
+      }).catch((err) => log.warn('tray', '切换开机自启异常', { err: err.message }))
+        .finally(() => { autostartToggling = false; });
     },
     onToggleWidget: () => toggleWidget(!widgetVisible),
     onToggleAutoScan: () => {
@@ -262,6 +270,23 @@ async function startScheduler() {
 ipcMain.on('widget:open-main', () => {
   log.info('widget', '收到 widget 点击，打开主窗口');
   showMainWindow();
+});
+
+// Phase 3：widget 页面 pointer 拖拽 → 主进程更新窗口位置
+// 不用 ipcMain.handle（renderer 不需要结果），单向 send 即可；失败仅记 log 不阻塞 UI
+ipcMain.on('widget:drag-start', (_e, payload) => {
+  if (!widgetHandle) return;
+  const r = widgetHandle.beginDrag(payload);
+  if (!r.ok) log.warn('widget', 'drag-start 拒绝', { err: r.error });
+});
+ipcMain.on('widget:drag-move', (_e, payload) => {
+  if (!widgetHandle) return;
+  const r = widgetHandle.dragTo(payload);
+  if (!r.ok && r.error !== 'not-dragging') log.warn('widget', 'drag-move 拒绝', { err: r.error });
+});
+ipcMain.on('widget:drag-end', () => {
+  if (!widgetHandle) return;
+  widgetHandle.endDrag();
 });
 
 // 打开资源管理器：目录排行 / 趋势分析 / 大文件 三个页面共用
@@ -356,6 +381,12 @@ async function bootstrap() {
 
   createWindow();
   createSystemWidget();
+  // 方案 A：自启改计划任务（登录时以最高权限静默启动，不弹 UAC）。
+  // 启动时自愈：任务已存在则用当前 exe 路径重建（覆盖安装/移动位置后旧任务指向失效路径），
+  // 并把状态缓存到 autostartEnabled 供托盘菜单同步读取
+  autostart = createAutostart({ app, log });
+  autostartEnabled = await autostart.refresh();
+  log.info('autostart', '开机自启状态', { enabled: autostartEnabled });
   createSystemTray();
   if (hidden) log.info('window', '隐藏启动（自启/静默），仅驻留托盘');
   else log.info('window', '正常显示窗口');

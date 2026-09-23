@@ -170,6 +170,10 @@ export default function TrendsPage() {
     },
   ];
 
+  let rankSuffix = '';
+  if (rangeText) rankSuffix = `（区间 ${rangeText}）`;
+  else if (topData?.compareAt) rankSuffix = `（对比 ${topData.compareAt}）`;
+
   return (
     <div>
       <CyberCard style={{ marginBottom: 20 }}>
@@ -229,11 +233,7 @@ export default function TrendsPage() {
 
       {!drillPath ? (
         <CyberCard>
-          <SectionTitle style={{ marginBottom: 16 }}>
-            {`增长排行 Top 20${
-              rangeText ? `（区间 ${rangeText}）` : topData?.compareAt ? `（对比 ${topData.compareAt}）` : ''
-            }`}
-          </SectionTitle>
+          <SectionTitle style={{ marginBottom: 16 }}>{`增长排行 Top 20${rankSuffix}`}</SectionTitle>
           {loadingTop ? (
             <div style={{ textAlign: 'center', padding: 40 }}>
               <Spin />

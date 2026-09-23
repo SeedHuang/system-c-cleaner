@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, Button, Popconfirm, Select, Spin, Table, Tag, Tooltip, message } from 'antd';
 import { CyberCard, SectionTitle } from '@/components/cyber';
+import { cyberColors } from '@/setup/theme';
 import type { ColumnsType } from 'antd/es/table';
 import { DeleteOutlined, FolderOpenOutlined } from '@ant-design/icons';
 import type { DeleteHistoryFilter, HistorySnapshot } from '@/services/history';
@@ -28,7 +29,8 @@ export default function HistoryPage() {
       setSnapshots(d.snapshots);
       setTotalSizeMB(d.totalSizeMB);
       setHistoryDir(d.historyDir);
-    } catch {
+    } catch (e) {
+      setMsg(`加载历史快照失败：${e instanceof Error ? e.message : '未知错误'}`);
       setSnapshots([]);
       setTotalSizeMB(0);
       setHistoryDir(null);
@@ -180,7 +182,7 @@ export default function HistoryPage() {
               打开快照目录
             </Button>
           </Tooltip>
-          <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)' }}>
+          <span style={{ fontSize: 13, color: cyberColors.textSecondary }}>
             共 {snapshots.length} 个快照，占用 {formatSize(totalSizeMB * 1024 * 1024)}
           </span>
         </span>
@@ -198,7 +200,7 @@ export default function HistoryPage() {
           style={{ width: 110 }}
           value={year}
           options={years.map((y) => ({ value: y, label: `${y} 年` }))}
-          onChange={setYear}
+          onChange={(v) => { setYear(v); setMonth(undefined); setDay(undefined); setHour(undefined); }}
         />
         <Select
           placeholder="月份"
@@ -207,7 +209,7 @@ export default function HistoryPage() {
           value={month}
           disabled={year == null || months.length === 0}
           options={months.map((m) => ({ value: m, label: `${m} 月` }))}
-          onChange={setMonth}
+          onChange={(v) => { setMonth(v); setDay(undefined); setHour(undefined); }}
         />
         <Select
           placeholder="日期"
@@ -216,7 +218,7 @@ export default function HistoryPage() {
           value={day}
           disabled={month == null || days.length === 0}
           options={days.map((d) => ({ value: d, label: `${d} 日` }))}
-          onChange={setDay}
+          onChange={(v) => { setDay(v); setHour(undefined); }}
         />
         <Select
           placeholder="小时"
@@ -237,7 +239,7 @@ export default function HistoryPage() {
             删除筛选结果
           </Button>
         </Popconfirm>
-        {msg && <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13 }}>{msg}</span>}
+        {msg && <span style={{ color: cyberColors.textSecondary, fontSize: 13 }}>{msg}</span>}
       </div>
 
       {loading ? (

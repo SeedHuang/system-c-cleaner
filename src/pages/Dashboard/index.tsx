@@ -199,8 +199,8 @@ export default function DashboardPage() {
                 style={{
                   marginTop: 12,
                   padding: '12px 14px',
-                  background: 'rgba(240,181,55,0.08)',
-                  border: `1px solid rgba(240,181,55,0.5)`,
+                  background: `${cyberColors.yellow}14`,
+                  border: `1px solid ${cyberColors.yellow}80`,
                   color: cyberColors.yellow,
                   fontSize: 13,
                 }}

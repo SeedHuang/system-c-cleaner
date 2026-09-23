@@ -11,7 +11,7 @@ import {
   SafetyCertificateOutlined,
   SearchOutlined,
 } from '@ant-design/icons';
-import { cyberColors } from '@/setup/theme';
+import { cyberColors, cyberFontStack } from '@/setup/theme';
 import { CyberButton, CyberCard, CyberDivider } from '@/components/cyber';
 import { formatGB } from '@/utils/format';
 import robotAvatar from '../../assets/robot.mp4';
@@ -76,14 +76,14 @@ export default function Layout() {
               height: 34,
               borderRadius: 0,
               objectFit: 'cover',
-              background: 'rgba(247,80,73,0.15)',
+              background: cyberColors.redSoft,
               border: `1px solid ${cyberColors.borderRed}`,
               flexShrink: 0,
             }}
           />
           <span
             style={{
-              fontFamily: "'Rajdhani', sans-serif",
+              fontFamily: cyberFontStack,
               fontSize: 18,
               fontWeight: 600,
               textTransform: 'uppercase',
@@ -163,13 +163,13 @@ export default function Layout() {
           </CyberButton>
           <div style={{ flex: 1 }} />
           {/* 可用空间卡 */}
-          <CyberCard variant="cyan">
+          <CyberCard variant="cyan" contentStyle={{ padding: '6px 14px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 0 }}>
               <div
                 style={{
                   width: 34,
                   height: 34,
-                  background: 'rgba(94,246,255,0.1)',
+                  background: cyberColors.cyanSoft,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -184,7 +184,7 @@ export default function Layout() {
                     fontSize: 13,
                     fontWeight: 600,
                     color: '#fff',
-                    fontFamily: "'Rajdhani', sans-serif",
+                    fontFamily: cyberFontStack,
                   }}
                 >
                   {freeGB != null ? `可用 ${formatGB(freeGB)}` : '可用 —'}

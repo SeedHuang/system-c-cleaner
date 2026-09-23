@@ -19,7 +19,13 @@ export const cyberColors = {
   borderCyan: 'rgba(94, 246, 255, 0.3)',
   borderRed: 'rgba(247, 80, 73, 0.5)',
   borderWhite: 'rgba(255, 255, 255, 0.08)',
+  hoverRed: 'rgba(247, 80, 73, 0.08)',
+  cyanSoft: 'rgba(94, 246, 255, 0.1)',
+  redSoft: 'rgba(247, 80, 73, 0.15)',
 } as const;
+
+/** CP2077 数字/英文标题字体栈（组件内联使用；antd token 用完整回退栈） */
+export const cyberFontStack = "'Rajdhani', sans-serif";
 
 /** 四色清理分类 */
 export const cleanupLevels = {
@@ -38,6 +44,9 @@ export const cyberTheme = {
     colorPrimary: cyberColors.red,
     colorInfo: cyberColors.cyan,
     colorLink: cyberColors.cyan,
+    colorSuccess: cyberColors.green,
+    colorWarning: cyberColors.yellow,
+    colorError: cyberColors.red,
     colorBgLayout: cyberColors.bgLayout,
     colorBgContainer: cyberColors.bgContainer,
     colorBgElevated: cyberColors.bgElevated,
@@ -68,7 +77,7 @@ export const cyberTheme = {
     Table: {
       headerBg: cyberColors.bgElevated,
       headerBorderRadius: 0,
-      rowHoverBg: 'rgba(247, 80, 73, 0.08)',
+      rowHoverBg: cyberColors.hoverRed,
     },
     Button: {
       primaryShadow: 'none',
