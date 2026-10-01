@@ -14,7 +14,7 @@ import {
 import { cyberColors, cyberFontStack } from '@/setup/theme';
 import { CyberButton, CyberCard, CyberDivider } from '@/components/cyber';
 import { formatGB } from '@/utils/format';
-import robotAvatar from '../../assets/robot.mp4';
+import avatarVideo from '../assets/video/MiniMaxH3_Easy_00006_.mp4';
 
 const menuItems = [
   { key: '/dashboard', icon: <DashboardOutlined />, label: '概览' },
@@ -61,26 +61,16 @@ export default function Layout() {
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: 10,
+            gap: 12,
             padding: '24px 20px 20px',
           }}
         >
-          <video
-            src={robotAvatar}
-            autoPlay
-            loop
-            muted
-            playsInline
-            style={{
-              width: 34,
-              height: 34,
-              borderRadius: 0,
-              objectFit: 'cover',
-              background: cyberColors.redSoft,
-              border: `1px solid ${cyberColors.borderRed}`,
-              flexShrink: 0,
-            }}
-          />
+          <div className="cyber-avatar">
+            <div className="cyber-avatar-frame">
+              <video src={avatarVideo} autoPlay loop muted playsInline />
+            </div>
+            <span className="cyber-avatar-dot" />
+          </div>
           <span
             style={{
               fontFamily: cyberFontStack,

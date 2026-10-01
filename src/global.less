@@ -93,6 +93,84 @@ body {
   color: #fff !important;
 }
 
+/* ---------- 赛博头像框（侧边栏品牌区） ---------- */
+.cyber-avatar {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+  /* drop-shadow 跟随切角轮廓发光，比 box-shadow 更贴合赛博几何 */
+  filter: drop-shadow(0 0 7px rgba(247, 80, 73, 0.4));
+}
+/* 青色直角括角：与红色切角对角呼应（右上 / 左下） */
+.cyber-avatar::before,
+.cyber-avatar::after {
+  content: '';
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  border: 2px solid rgba(94, 246, 255, 0.75);
+  z-index: 1;
+}
+.cyber-avatar::before {
+  top: -4px;
+  right: -4px;
+  border-left: none;
+  border-bottom: none;
+}
+.cyber-avatar::after {
+  bottom: -4px;
+  left: -4px;
+  border-right: none;
+  border-top: none;
+}
+/* 外框：红→青渐变描边（1px padding + 内层同形 clip，同 CyberCard 手法） */
+.cyber-avatar-frame {
+  width: 100%;
+  height: 100%;
+  padding: 1px;
+  clip-path: polygon(
+    10px 0,
+    100% 0,
+    100% calc(100% - 10px),
+    calc(100% - 10px) 100%,
+    0 100%,
+    0 10px
+  );
+  background: linear-gradient(
+    135deg,
+    rgba(247, 80, 73, 0.95),
+    rgba(247, 80, 73, 0.3) 50%,
+    rgba(94, 246, 255, 0.55)
+  );
+}
+.cyber-avatar-frame video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: #0e0e17;
+  clip-path: polygon(
+    9px 0,
+    100% 0,
+    100% calc(100% - 9px),
+    calc(100% - 9px) 100%,
+    0 100%,
+    0 9px
+  );
+}
+/* 在线状态点：呼应底部“安全模式”绿 */
+.cyber-avatar-dot {
+  position: absolute;
+  right: -5px;
+  bottom: -5px;
+  width: 8px;
+  height: 8px;
+  background: #1ded83;
+  box-shadow: 0 0 6px rgba(29, 237, 131, 0.8);
+  z-index: 2;
+}
+
 /* ---------- 顶栏搜索框 ---------- */
 .cyber-search.ant-input-affix-wrapper {
   background: #161616;

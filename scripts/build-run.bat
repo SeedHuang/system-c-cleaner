@@ -23,6 +23,10 @@ if errorlevel 1 (
 )
 
 echo [1/4] Packaging NSIS installer (electron-builder --win) ...
+rem Kill leftover app instance first: the app lives in tray after window
+rem close, and electron-builder fails with EBUSY clearing win-unpacked.
+taskkill /f /im Roberta.exe >nul 2>&1
+ping -n 2 127.0.0.1 >nul
 call npx electron-builder --win --publish never
 if errorlevel 1 (
   echo [ERROR] packaging failed

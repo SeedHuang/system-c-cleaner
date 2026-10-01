@@ -1,6 +1,6 @@
 /**
  * 全路径日志：console + 文件双写，按天滚动，写失败降级 console（不抛错）。
- * 级别：INFO（正常分支）/ WARN（边界分支）/ ERROR（catch 分支，含堆栈）。
+ * 级别：INFO（正常分支）/ WARN（边界分支）/ ERROR（catch 分支，含堆栈）/ DEBUG（无害分支）。
  */
 const fs = require('fs');
 const path = require('path');
@@ -35,6 +35,7 @@ function createLogger({ logDir = null, name = 'app', write = null, console: out 
     if (level === 'ERROR') out.error(line); else out.log(line);
   };
   return {
+    debug: (module, msg, detail) => emit('DEBUG', module, msg, detail),
     info: (module, msg, detail) => emit('INFO', module, msg, detail),
     warn: (module, msg, detail) => emit('WARN', module, msg, detail),
     error: (module, msg, errOrDetail) => {
